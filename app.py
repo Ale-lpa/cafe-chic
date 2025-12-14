@@ -18,120 +18,113 @@ except:
 
 client = OpenAI(api_key=API_KEY)
 
-# --- ESTILOS CSS (ESTILO TARJETA DE VISITA: RAYAS Y DORADO) ---
+# --- ESTILOS CSS (DISEÑO COMPACTO Y CHIC) ---
 st.markdown("""
     <style>
-    /* IMPORTAR TIPOGRAFÍA CURSIVA ELEGANTE */
+    /* IMPORTAR TIPOGRAFÍA */
     @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Helvetica+Neue:wght@300;400;600&display=swap');
 
-    /* 1. FONDO PRINCIPAL CON RAYAS VERTICALES (Como la tarjeta) */
+    /* 1. FONDO PRINCIPAL CON RAYAS (Igual que antes) */
     [data-testid="stAppViewContainer"] {
-        background-color: #FFFFFF; /* Color base */
+        background-color: #FFFFFF;
         background-image: repeating-linear-gradient(
             90deg,
             #FFFFFF,
             #FFFFFF 25px,
-            #8FA891 25px, /* Verde Salvia de la tarjeta */
+            #8FA891 25px,
             #8FA891 50px
         );
     }
     
-    /* Contenedor principal para centrar y dar fondo blanco al chat */
+    /* 2. CONTENEDOR PRINCIPAL (MÁS COMPACTO) */
+    /* Reducimos padding para aprovechar espacio */
     [data-testid="stMainBlockContainer"] {
-        background-color: rgba(255, 255, 255, 0.95); /* Blanco casi opaco */
-        padding: 30px;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        margin-top: 20px;
-        margin-bottom: 20px;
-        border: 2px solid #D4AF37; /* Borde dorado fino */
+        background-color: rgba(255, 255, 255, 0.96);
+        padding: 15px; /* Antes 30px, ahora más ajustado */
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        margin-top: 10px;
+        margin-bottom: 10px;
+        border: 2px solid #D4AF37;
+        max-width: 700px;
     }
 
-    /* 2. BARRA LATERAL (Blanca limpia, como la cabecera de la tarjeta) */
+    /* 3. BARRA LATERAL */
     section[data-testid="stSidebar"] {
         background-color: #FFFFFF;
-        border-right: 2px solid #D4AF37; /* Separador dorado */
-        box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        border-right: 2px solid #D4AF37;
     }
-    /* Textos de la barra lateral */
     section[data-testid="stSidebar"] h1 {
-        color: #D4AF37 !important; /* Título dorado */
+        color: #D4AF37 !important;
         font-family: 'Dancing Script', cursive !important;
-        font-size: 2.5rem !important;
+        font-size: 2rem !important; /* Un poco más pequeño */
+        margin-bottom: 0px;
     }
-    section[data-testid="stSidebar"] p, section[data-testid="stSidebar"] li, section[data-testid="stSidebar"] div, .stAlert {
-        color: #556B2F !important; /* Texto verde oscuro */
-        font-family: 'Helvetica Neue', sans-serif;
-        background-color: #F9FBF9 !important; /* Fondo muy clarito para las cajas */
+    section[data-testid="stSidebar"] p, .stAlert {
+        color: #556B2F !important;
+        background-color: #F9FBF9 !important;
         border: 1px solid #8FA891 !important;
+        font-size: 0.9rem;
     }
     
-    /* 3. TÍTULOS PRINCIPALES (Estilo Logo Dorado) */
+    /* 4. TÍTULOS (Más pegados) */
     .titulo-principal {
-        font-family: 'Dancing Script', cursive; /* Tipografía de logo */
-        color: #D4AF37; /* Dorado */
+        font-family: 'Dancing Script', cursive;
+        color: #D4AF37;
         text-align: center;
-        font-size: 4rem;
+        font-size: 3rem; /* Reducido un poco */
         margin-top: 0px;
-        margin-bottom: 10px;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        margin-bottom: 0px;
+        line-height: 1.2;
     }
     .subtitulo {
         text-align: center;
-        color: #8FA891; /* Verde Salvia */
+        color: #8FA891;
         font-family: 'Helvetica Neue', sans-serif;
         font-weight: 600;
-        font-size: 1.2rem;
-        margin-bottom: 30px;
-        letter-spacing: 3px;
+        font-size: 0.9rem;
+        margin-bottom: 15px; /* Menos espacio debajo */
+        letter-spacing: 2px;
         text-transform: uppercase;
     }
 
-    /* 4. BURBUJAS DE CHAT (Limpias y Chic) */
+    /* 5. BURBUJAS DE CHAT (COMPACTAS) */
     .stChatMessage {
         background-color: #FFFFFF;
-        border-radius: 15px;
-        padding: 15px;
-        margin-bottom: 15px;
+        border-radius: 12px;
+        padding: 10px 15px; /* Menos relleno interno */
+        margin-bottom: 8px; /* Menos espacio entre mensajes */
         border: 1px solid #E0E0E0;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-    }
-    /* Burbuja del Asistente */
-    .stChatMessage:has([data-testid="chatAvatarIcon-assistant"]) {
-        border: 1px solid #8FA891; /* Borde verde suave */
-        background-color: #F4F8F4; /* Fondo verde muy pálido */
-    }
-    /* Avatar del asistente */
-    .stChatMessage .stAvatar {
-        background-color: #8FA891 !important; /* Verde Salvia */
-        color: white !important;
-    }
-    /* Avatar del usuario */
-    .stChatMessage:has([data-testid="chatAvatarIcon-user"]) .stAvatar {
-        background-color: #D4AF37 !important; /* Dorado */
-    }
-
-    /* 5. TEXTOS Y DETALLES */
-    .stChatMessage p {
-        color: #444 !important;
-        font-size: 1.05rem;
-        line-height: 1.5;
-        font-family: 'Helvetica Neue', sans-serif;
-    }
-    .stChatMessage strong {
-        color: #D4AF37 !important; /* Platos en Dorado */
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
     
-    /* 6. BARRA DE ENTRADA DE TEXTO */
-    [data-testid="stChatInput"] {
-        border-color: #D4AF37 !important; /* Borde dorado */
-        border-radius: 25px;
+    /* Estilos específicos burbujas */
+    .stChatMessage:has([data-testid="chatAvatarIcon-assistant"]) {
+        border-left: 3px solid #8FA891;
+        background-color: #F8FAF8;
+    }
+    .stChatMessage .stAvatar {
+        background-color: #8FA891 !important;
+        color: white !important;
+        width: 28px; /* Avatar más pequeño */
+        height: 28px;
     }
 
-    /* 7. OCULTAR ELEMENTOS INNECESARIOS */
-    [data-testid="stHeader"] {background-color: rgba(0,0,0,0);}
-    [data-testid="stToolbar"] {visibility: hidden !important;}
-    footer {visibility: hidden;}
+    /* 6. TEXTO DE LOS MENSAJES */
+    .stChatMessage p {
+        color: #333 !important;
+        font-size: 0.95rem;
+        line-height: 1.4; /* Líneas más juntas */
+        margin-bottom: 0px;
+    }
+    /* Precios y Platos destacados */
+    .stChatMessage strong {
+        color: #D4AF37 !important;
+        font-weight: 700;
+    }
+
+    /* 7. OCULTAR ELEMENTOS */
+    [data-testid="stHeader"], [data-testid="stToolbar"], footer {visibility: hidden;}
     </style>
 """, unsafe_allow_html=True)
 
@@ -146,54 +139,59 @@ def cargar_menu():
 menu_data = cargar_menu()
 menu_texto = json.dumps(menu_data, ensure_ascii=False)
 
-# --- BARRA LATERAL (ESTILO LOGO) ---
+# --- BARRA LATERAL ---
 with st.sidebar:
-    # Usamos la tipografía cursiva para el título
     st.markdown("<h1>Café Chic</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; font-size: 0.9rem; margin-top:-15px; color: #8FA891 !important;'>RESTAURANTE & BRUNCH</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 0.8rem; color: #8FA891 !important; margin-top:-10px;'>RESTAURANTE & BRUNCH</p>", unsafe_allow_html=True)
     st.markdown("---")
     
-    st.markdown("### 🕒 Horario")
+    st.markdown("**🕒 Horario**")
     st.success("""
-    **Lun - Mié:** 10:00 - 16:00
-    **Jue - Vie:** 10:00 - 23:00
-    **Sábado:** 11:00 - 17:00
-    **Domingo:** CERRADO
+    L-X: 10-16h | J-V: 10-23h
+    Sáb: 11-17h | Dom: CERRADO
     """)
     
-    st.markdown("### 📞 Reservas")
-    st.info("**682 27 26 51**")
-    
-    st.markdown("---")
+    st.markdown("**📞 Reservas**")
+    st.info("682 27 26 51")
     st.caption("📍 C/ Mendizábal, 39 - Vegueta")
 
 # --- CHAT ---
+# Aquí cambiamos las instrucciones para asegurar EUROS y DESCIPCIONES
 system_prompt = f"""
 Eres el asistente virtual de 'Café Chic'.
-Estilo: Fresco, amable y elegante. Usas emojis como 🥑, 🌿, ☕, 🥂.
+Estilo: Fresco, profesional y persuasivo. Emojis: 🥑, 🌿, ☕, 🥂.
 MENÚ: {menu_texto}
 
-REGLAS:
-1. Horarios: L-X cierre 16:00. J-V cierre 23:00. Domingo Cerrado.
-2. Venta Cruzada: Sugiere bebida con comida y postre con café.
-3. Sé conciso y visualmente atractivo.
+REGLAS DE FORMATO (ESTRICTAS):
+1. **MONEDA:** Usa SIEMPRE el símbolo de Euro (€) al final del precio. NUNCA uses dólares ($).
+2. **ESTRUCTURA DE PLATO:** Cuando recomiendes, usa este formato compacto:
+   - **Nombre del Plato** (Precio €)
+   - *Pequeña descripción atractiva basada en los ingredientes.*
+3. **ESPACIADO:** No dejes líneas en blanco innecesarias. Agrupa la información.
+4. **VENTA CRUZADA:** Si piden comida, sugiere bebida corta y directa.
+
+EJEMPLO DE RESPUESTA IDEAL:
+"Te recomiendo los **Huevos Benedictinos** (9,90€). Son deliciosos huevos escalfados sobre pan tostado con bacon crujiente y nuestra salsa holandesa casera 🍳.
+¿Te apetece acompañarlos con una **Mimosa** (5,50€) bien fresquita? 🥂"
 """
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "assistant", "content": "¡Hola! 🌿 Bienvenido a **Café Chic**.\n\n¿Te apetece un **Brunch** delicioso 🥑 o vienes a disfrutar de nuestro almuerzo? 🥂"}
+        {"role": "assistant", "content": "¡Hola! 🌿 Bienvenido a **Café Chic**.\n\n¿Te apetece un **Brunch** completo 🥑 o prefieres ver opciones de almuerzo? ✨"}
     ]
 
-# Títulos principales con el nuevo estilo
+# Títulos
 st.markdown('<div class="titulo-principal">Café Chic</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitulo">Asistente Virtual</div>', unsafe_allow_html=True)
 
+# Renderizar chat
 for m in st.session_state.messages:
     if m["role"] != "system":
         with st.chat_message(m["role"], avatar="🥑" if m["role"] == "assistant" else "👤"):
             st.markdown(m["content"])
 
+# Input usuario
 if prompt := st.chat_input("Ej: ¿Qué lleva la Tosta con Aguacate?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="👤"):
