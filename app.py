@@ -18,13 +18,13 @@ except:
 
 client = OpenAI(api_key=API_KEY)
 
-# --- ESTILOS CSS (DISEÑO COMPACTO Y CHIC) ---
+# --- ESTILOS CSS (DISEÑO PULIDO Y TEXTO CUADRADO) ---
 st.markdown("""
     <style>
     /* IMPORTAR TIPOGRAFÍA */
     @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Helvetica+Neue:wght@300;400;600&display=swap');
 
-    /* 1. FONDO PRINCIPAL CON RAYAS (Igual que antes) */
+    /* 1. FONDO PRINCIPAL CON RAYAS */
     [data-testid="stAppViewContainer"] {
         background-color: #FFFFFF;
         background-image: repeating-linear-gradient(
@@ -36,15 +36,14 @@ st.markdown("""
         );
     }
     
-    /* 2. CONTENEDOR PRINCIPAL (MÁS COMPACTO) */
-    /* Reducimos padding para aprovechar espacio */
+    /* 2. CONTENEDOR PRINCIPAL */
     [data-testid="stMainBlockContainer"] {
-        background-color: rgba(255, 255, 255, 0.96);
-        padding: 15px; /* Antes 30px, ahora más ajustado */
-        border-radius: 15px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-        margin-top: 10px;
-        margin-bottom: 10px;
+        background-color: rgba(255, 255, 255, 0.98); /* Más opaco para leer mejor */
+        padding: 25px; /* Más espacio interno */
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        margin-top: 20px;
+        margin-bottom: 20px;
         border: 2px solid #D4AF37;
         max-width: 700px;
     }
@@ -57,8 +56,8 @@ st.markdown("""
     section[data-testid="stSidebar"] h1 {
         color: #D4AF37 !important;
         font-family: 'Dancing Script', cursive !important;
-        font-size: 2rem !important; /* Un poco más pequeño */
-        margin-bottom: 0px;
+        font-size: 2.2rem !important;
+        margin-bottom: 5px;
     }
     section[data-testid="stSidebar"] p, .stAlert {
         color: #556B2F !important;
@@ -67,57 +66,61 @@ st.markdown("""
         font-size: 0.9rem;
     }
     
-    /* 4. TÍTULOS (Más pegados) */
+    /* 4. TÍTULOS */
     .titulo-principal {
         font-family: 'Dancing Script', cursive;
         color: #D4AF37;
         text-align: center;
-        font-size: 3rem; /* Reducido un poco */
+        font-size: 3.5rem;
         margin-top: 0px;
-        margin-bottom: 0px;
+        margin-bottom: 5px;
         line-height: 1.2;
+        text-shadow: 1px 1px 0px rgba(0,0,0,0.1);
     }
     .subtitulo {
         text-align: center;
         color: #8FA891;
         font-family: 'Helvetica Neue', sans-serif;
         font-weight: 600;
-        font-size: 0.9rem;
-        margin-bottom: 15px; /* Menos espacio debajo */
-        letter-spacing: 2px;
+        font-size: 1rem;
+        margin-bottom: 25px;
+        letter-spacing: 3px;
         text-transform: uppercase;
     }
 
-    /* 5. BURBUJAS DE CHAT (COMPACTAS) */
+    /* 5. BURBUJAS DE CHAT (AQUÍ ESTÁ EL AJUSTE CLAVE) */
     .stChatMessage {
         background-color: #FFFFFF;
-        border-radius: 12px;
-        padding: 10px 15px; /* Menos relleno interno */
-        margin-bottom: 8px; /* Menos espacio entre mensajes */
-        border: 1px solid #E0E0E0;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        border-radius: 18px; /* Bordes más redondeados */
+        padding: 20px 25px; /* MÁS AIRE: Texto perfectamente encuadrado */
+        margin-bottom: 15px;
+        border: 1px solid #EAEAEA;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
     }
     
-    /* Estilos específicos burbujas */
+    /* Burbuja del Asistente */
     .stChatMessage:has([data-testid="chatAvatarIcon-assistant"]) {
-        border-left: 3px solid #8FA891;
-        background-color: #F8FAF8;
+        border-left: 4px solid #8FA891; /* Borde lateral verde más visible */
+        background-color: #FDFDFD;
     }
+    
+    /* Avatar */
     .stChatMessage .stAvatar {
         background-color: #8FA891 !important;
         color: white !important;
-        width: 28px; /* Avatar más pequeño */
-        height: 28px;
+        width: 35px;
+        height: 35px;
     }
 
-    /* 6. TEXTO DE LOS MENSAJES */
-    .stChatMessage p {
-        color: #333 !important;
-        font-size: 0.95rem;
-        line-height: 1.4; /* Líneas más juntas */
-        margin-bottom: 0px;
+    /* 6. TEXTO DE LOS MENSAJES (LEIBILIDAD) */
+    .stChatMessage p, .stChatMessage li {
+        color: #444 !important;
+        font-size: 1.05rem; /* Letra un pelín más grande */
+        line-height: 1.6; /* MÁS INTERLINEADO: Para que no se vea pegado */
+        margin-bottom: 8px;
+        font-family: 'Helvetica Neue', sans-serif;
     }
-    /* Precios y Platos destacados */
+    /* Precios destacados */
     .stChatMessage strong {
         color: #D4AF37 !important;
         font-weight: 700;
@@ -156,22 +159,21 @@ with st.sidebar:
     st.caption("📍 C/ Mendizábal, 39 - Vegueta")
 
 # --- CHAT ---
-# Aquí cambiamos las instrucciones para asegurar EUROS y DESCIPCIONES
 system_prompt = f"""
 Eres el asistente virtual de 'Café Chic'.
 Estilo: Fresco, profesional y persuasivo. Emojis: 🥑, 🌿, ☕, 🥂.
 MENÚ: {menu_texto}
 
 REGLAS DE FORMATO (ESTRICTAS):
-1. **MONEDA:** Usa SIEMPRE el símbolo de Euro (€) al final del precio. NUNCA uses dólares ($).
-2. **ESTRUCTURA DE PLATO:** Cuando recomiendes, usa este formato compacto:
+1. **MONEDA:** Usa SIEMPRE el símbolo de Euro (€) al final del precio.
+2. **ESTRUCTURA DE PLATO:**
    - **Nombre del Plato** (Precio €)
-   - *Pequeña descripción atractiva basada en los ingredientes.*
-3. **ESPACIADO:** No dejes líneas en blanco innecesarias. Agrupa la información.
-4. **VENTA CRUZADA:** Si piden comida, sugiere bebida corta y directa.
+   - *Breve descripción deliciosa.*
+3. **ESPACIADO:** Usa párrafos cortos para facilitar la lectura.
 
-EJEMPLO DE RESPUESTA IDEAL:
+EJEMPLO DE RESPUESTA:
 "Te recomiendo los **Huevos Benedictinos** (9,90€). Son deliciosos huevos escalfados sobre pan tostado con bacon crujiente y nuestra salsa holandesa casera 🍳.
+
 ¿Te apetece acompañarlos con una **Mimosa** (5,50€) bien fresquita? 🥂"
 """
 
