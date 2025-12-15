@@ -18,7 +18,7 @@ except:
 
 client = OpenAI(api_key=API_KEY)
 
-# --- ESTILOS CSS (DISEÑO PULIDO Y TEXTO CUADRADO) ---
+# --- ESTILOS CSS (DISEÑO CHIC, RAYAS Y DORADO) ---
 st.markdown("""
     <style>
     /* IMPORTAR TIPOGRAFÍA */
@@ -38,8 +38,8 @@ st.markdown("""
     
     /* 2. CONTENEDOR PRINCIPAL */
     [data-testid="stMainBlockContainer"] {
-        background-color: rgba(255, 255, 255, 0.98); /* Más opaco para leer mejor */
-        padding: 25px; /* Más espacio interno */
+        background-color: rgba(255, 255, 255, 0.98);
+        padding: 25px;
         border-radius: 20px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.08);
         margin-top: 20px;
@@ -88,23 +88,19 @@ st.markdown("""
         text-transform: uppercase;
     }
 
-    /* 5. BURBUJAS DE CHAT (AQUÍ ESTÁ EL AJUSTE CLAVE) */
+    /* 5. BURBUJAS DE CHAT */
     .stChatMessage {
         background-color: #FFFFFF;
-        border-radius: 18px; /* Bordes más redondeados */
-        padding: 20px 25px; /* MÁS AIRE: Texto perfectamente encuadrado */
+        border-radius: 18px;
+        padding: 20px 25px;
         margin-bottom: 15px;
         border: 1px solid #EAEAEA;
         box-shadow: 0 2px 8px rgba(0,0,0,0.03);
     }
-    
-    /* Burbuja del Asistente */
     .stChatMessage:has([data-testid="chatAvatarIcon-assistant"]) {
-        border-left: 4px solid #8FA891; /* Borde lateral verde más visible */
+        border-left: 4px solid #8FA891;
         background-color: #FDFDFD;
     }
-    
-    /* Avatar */
     .stChatMessage .stAvatar {
         background-color: #8FA891 !important;
         color: white !important;
@@ -112,15 +108,14 @@ st.markdown("""
         height: 35px;
     }
 
-    /* 6. TEXTO DE LOS MENSAJES (LEIBILIDAD) */
+    /* 6. TEXTOS */
     .stChatMessage p, .stChatMessage li {
         color: #444 !important;
-        font-size: 1.05rem; /* Letra un pelín más grande */
-        line-height: 1.6; /* MÁS INTERLINEADO: Para que no se vea pegado */
+        font-size: 1.05rem;
+        line-height: 1.6;
         margin-bottom: 8px;
         font-family: 'Helvetica Neue', sans-serif;
     }
-    /* Precios destacados */
     .stChatMessage strong {
         color: #D4AF37 !important;
         font-weight: 700;
@@ -167,18 +162,28 @@ MENÚ: {menu_texto}
 Debes responder ESTRICTAMENTE en el mismo idioma que use el usuario en su último mensaje.
 - Usuario escribe en Inglés -> TU RESPONDES EN INGLÉS 🇬🇧.
 - Usuario escribe en Alemán -> TU RESPONDES EN ALEMÁN 🇩🇪.
-- Usuario escribe en Francés -> TU RESPONDES EN FRANCÉS 🇫🇷.
-(NO respondas en español si te hablan en otro idioma, aunque tu menú esté en español).
+- Usuario escribe en Italiano -> TU RESPONDES EN ITALIANO 🇮🇹.
+(NO respondas en español si te hablan en otro idioma).
 
 GUIDELINES:
-1. **Traducción:** Si hablas en otro idioma, traduce los nombres de los platos y descríbelos para que el turista entienda los ingredientes.
-2. **Formato:** Usa negritas para los platos y siempre PRECIO en EUROS (€).
-3. **Venta:** Recomienda siempre una bebida o postre.
+1. **TRADUCCIÓN:** Si hablas en otro idioma, traduce los nombres de los platos y descríbelos brevemente para que el turista entienda los ingredientes.
+2. **MONEDA:** Siempre en EUROS (€).
+3. **FORMATO:**
+   - **Nombre del Plato** (Precio €)
+   - *Breve descripción.*
+4. **VENTA:** Recomienda siempre una bebida o postre.
 
 Ejemplo Inglés:
 User: "Do you have fish?"
-Assistant: "Yes! I recommend the **Lubina a la Plancha** (7,50€). It is a fresh grilled seabass served with typical Canarian potatoes..."
+Assistant: "Yes! I recommend the **Lubina a la Plancha** (7,50€). It is a fresh grilled seabass served with typical Canarian potatoes and green mojo sauce... 🐟"
 """
+
+if "messages" not in st.session_state:
+    st.session_state.messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "assistant", "content": "¡Hola! 🌿 Bienvenido a **Café Chic**.\n\n¿Te apetece un **Brunch** completo 🥑 o prefieres ver opciones de almuerzo? ✨"}
+    ]
+
 # Títulos
 st.markdown('<div class="titulo-principal">Café Chic</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitulo">Asistente Virtual</div>', unsafe_allow_html=True)
