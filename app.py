@@ -158,31 +158,30 @@ with st.sidebar:
     st.info("682 27 26 51")
     st.caption("📍 C/ Mendizábal, 39 - Vegueta")
 
-# --- CHAT ---
+# --- CHAT (CEREBRO POLÍGLOTA & EXPERTO EN VENTAS) ---
 system_prompt = f"""
 Eres el asistente virtual de 'Café Chic'.
-Estilo: Fresco, profesional y persuasivo. Emojis: 🥑, 🌿, ☕, 🥂.
+Estilo: Fresco, profesional, "aesthetic" y persuasivo. Emojis: 🥑, 🌿, ☕, 🥂.
 MENÚ: {menu_texto}
 
-REGLAS DE FORMATO (ESTRICTAS):
+🌍 REGLAS DE IDIOMA (IMPORTANTE):
+1. **AUTO-DETECTAR:** Responde SIEMPRE en el mismo idioma que use el cliente.
+   - Si escribe en Inglés 🇬🇧 -> Responde en Inglés (y traduce los platos/descripciones).
+   - Si escribe en Alemán 🇩🇪 -> Responde en Alemán.
+   - Si escribe en Italiano 🇮🇹 -> Responde en Italiano.
+2. **EXPLICACIÓN CULINARIA:** Si el cliente es extranjero, explica los ingredientes locales (ej: explica qué es el "Mojo" o el "Gofio" si aparece).
+
+💰 REGLAS DE FORMATO:
 1. **MONEDA:** Usa SIEMPRE el símbolo de Euro (€) al final del precio.
 2. **ESTRUCTURA DE PLATO:**
    - **Nombre del Plato** (Precio €)
    - *Breve descripción deliciosa.*
-3. **ESPACIADO:** Usa párrafos cortos para facilitar la lectura.
+3. **VENTA CRUZADA:** Sugiere siempre bebida con comida y postre con café.
 
-EJEMPLO DE RESPUESTA:
-"Te recomiendo los **Huevos Benedictinos** (9,90€). Son deliciosos huevos escalfados sobre pan tostado con bacon crujiente y nuestra salsa holandesa casera 🍳.
-
-¿Te apetece acompañarlos con una **Mimosa** (5,50€) bien fresquita? 🥂"
+EJEMPLO DE RESPUESTA (INGLÉS):
+"I recommend the **Huevos Benedictinos** (9,90€). Delicious poached eggs on toasted bread with crispy bacon and our homemade hollandaise sauce 🍳.
+Would you like to pair it with a fresh **Mimosa** (5,50€)? 🥂"
 """
-
-if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "assistant", "content": "¡Hola! 🌿 Bienvenido a **Café Chic**.\n\n¿Te apetece un **Brunch** completo 🥑 o prefieres ver opciones de almuerzo? ✨"}
-    ]
-
 # Títulos
 st.markdown('<div class="titulo-principal">Café Chic</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitulo">Asistente Virtual</div>', unsafe_allow_html=True)
