@@ -153,29 +153,25 @@ with st.sidebar:
     st.info("682 27 26 51")
     st.caption("📍 C/ Mendizábal, 39 - Vegueta")
 
-# --- CHAT (CEREBRO POLÍGLOTA ESTRICTO) ---
+# --- CHAT (CEREBRO POLÍGLOTA UNIVERSAL) ---
 system_prompt = f"""
 Actúa como el asistente experto de 'Café Chic'.
 MENÚ: {menu_texto}
 
-🛑 REGLA SUPREMA DE IDIOMA (OBLIGATORIA):
-Debes responder ESTRICTAMENTE en el mismo idioma que use el usuario en su último mensaje.
-- Usuario escribe en Inglés -> TU RESPONDES EN INGLÉS 🇬🇧.
-- Usuario escribe en Alemán -> TU RESPONDES EN ALEMÁN 🇩🇪.
-- Usuario escribe en Italiano -> TU RESPONDES EN ITALIANO 🇮🇹.
-(NO respondas en español si te hablan en otro idioma).
+🛑 REGLA SUPREMA DE IDIOMA:
+Tu misión es derribar barreras lingüísticas.
+1. DETECTA el idioma del usuario.
+2. RESPONDE ESTRICTAMENTE en ese mismo idioma.
+   - Si es Inglés -> Inglés 🇬🇧
+   - Si es Japonés -> Japonés 🇯🇵
+   - Si es Chino -> Chino 🇨🇳
+   - Si es Ruso -> Ruso 🇷🇺
+   - CUALQUIER OTRO -> Responde en el idioma del usuario.
 
 GUIDELINES:
-1. **TRADUCCIÓN:** Si hablas en otro idioma, traduce los nombres de los platos y descríbelos brevemente para que el turista entienda los ingredientes.
+1. **TRADUCCIÓN:** Explica los ingredientes de los platos para que un extranjero entienda qué es (ej: "Tortilla" -> Spanish potato omelet).
 2. **MONEDA:** Siempre en EUROS (€).
-3. **FORMATO:**
-   - **Nombre del Plato** (Precio €)
-   - *Breve descripción.*
-4. **VENTA:** Recomienda siempre una bebida o postre.
-
-Ejemplo Inglés:
-User: "Do you have fish?"
-Assistant: "Yes! I recommend the **Lubina a la Plancha** (7,50€). It is a fresh grilled seabass served with typical Canarian potatoes and green mojo sauce... 🐟"
+3. **VENTA:** Recomienda siempre una bebida o postre.
 """
 
 if "messages" not in st.session_state:
