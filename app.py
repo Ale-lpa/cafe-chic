@@ -39,7 +39,7 @@ st.markdown("""
         max-width: 700px;
     }
 
-    /* 3. TÍTULOS (CORREGIDO) */
+    /* 3. TÍTULOS */
     .titulo-principal {
         font-family: 'Dancing Script', cursive;
         color: #D4AF37;
@@ -143,8 +143,17 @@ def agregar_item(nombre_plato):
                 break
     st.session_state.pedido.append({"item": nombre_plato, "precio": precio})
     st.session_state.pagado = False
-    # Devolvemos un mensaje neutro en inglés para que la IA lo traduzca
-    return f"System: Item '{nombre_plato}' added to bill."
+    
+    # --- TRUCO DEL ALMENDRUCO ---
+    # Devolvemos una instrucción técnica a la IA, no un texto para el usuario.
+    # Esto obliga a la IA a procesar la venta cruzada.
+    return f"""
+    [SYSTEM INFO]: Item '{nombre_plato}' added to DB.
+    [INSTRUCTION FOR AI RESPONSE]: 
+    1. Confirm to user in THEIR language.
+    2. TRANSLATE the item name '{nombre_plato}' to their language (e.g., 'Toast all'avocado' for Italian).
+    3. SUGGEST a matching drink or dessert immediately.
+    """
 
 # --- TOOLS ---
 tools = [
@@ -174,7 +183,6 @@ with st.sidebar:
         st.rerun()
 
 # --- HEADER (TÍTULO) ---
-# Esto asegura que el título siempre salga
 st.markdown('<div class="titulo-principal">Café Chic</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitulo">Asistente Virtual</div>', unsafe_allow_html=True)
 
@@ -185,7 +193,7 @@ if st.session_state.pagado: label_ticket = f"🎟️ TICKET PAGADO | Total: {tot
 
 with st.expander(label_ticket, expanded=(len(st.session_state.pedido) > 0)):
     if not st.session_state.pedido:
-        st.info("Tu cuenta está vacía. Pide algo al camarero. 🥑")
+        st.info("Tu cuenta está vacía. Pide algo al chat. 🥑")
     else:
         st.markdown("###### 🛒 Tu Pedido:")
         for i, p in enumerate(st.session_state.pedido):
@@ -215,22 +223,17 @@ with st.expander(label_ticket, expanded=(len(st.session_state.pedido) > 0)):
 # --- CHATBOT (CEREBRO) ---
 system_prompt = f"""
 Eres 'Leo', el camarero virtual de 'Café Chic'. 
-MENÚ: {menu_texto}
+MENÚ (Base de datos en Español): {menu_texto}
 
-🔴 REGLA 1 (IDIOMA):
-1. Detecta el idioma del usuario (Italiano, Inglés, Alemán, etc).
-2. Responde SIEMPRE en ese mismo idioma.
+🔴 REGLAS DE ORO (SÍGUELAS OBLIGATORIAMENTE):
+1. **IDIOMA:** Detecta el idioma del usuario. Responde SIEMPRE en ese idioma.
+2. **TRADUCCIÓN:** Los nombres del menú están en español (ej: "Tosta Aguacate"). Si hablas en otro idioma, **TRADÚCELOS** (ej: Italiano -> "Toast all'avocado").
+3. **VENTA CRUZADA:** Nunca digas solo "Añadido". Sugiere SIEMPRE una bebida o postre específico que combine.
 
-🔴 REGLA 2 (TRADUCCIÓN DE PLATOS):
-Cuando menciones un plato en tu respuesta, **TRADÚCELO** al idioma del usuario si es necesario para que suene natural.
-(Ej: Si hablas italiano, di "Toast all'avocado" en lugar de "Tosta Aguacate").
-
-🔴 REGLA 3 (VENTA):
-**SIEMPRE** sugiere un acompañamiento (Bebida o Postre) que vaya bien con lo que han pedido. ¡Tienes que vender!
-
-ESTILO:
-- Usa emojis (🥑, ☕, ✨).
-- Sé breve y amable.
+EJEMPLO ITALIANO:
+Usuario: "Voglio la tosta"
+Bot: "Perfetto! 🥑 Ho aggiunto il **Toast all'avocado** (8.50€).
+Ti piacerebbe accompagnarlo con un **Succo d'arancia** fresco? 🍊"
 """
 
 if "messages" not in st.session_state or len(st.session_state.messages) == 0:
@@ -255,7 +258,7 @@ if prompt := st.chat_input("Pide aquí... (Ej: Café y Tosta)"):
         )
         msg = response.choices[0].message
         
-        # Guardar mensaje limpio
+        # Guardar mensaje limpio para evitar errores
         msg_dict = {"role": msg.role, "content": msg.content}
         if msg.tool_calls:
             msg_dict["tool_calls"] = [{"id": t.id, "type": t.type, "function": {"name": t.function.name, "arguments": t.function.arguments}} for t in msg.tool_calls]
@@ -267,6 +270,7 @@ if prompt := st.chat_input("Pide aquí... (Ej: Café y Tosta)"):
                     res = agregar_item(args.get("nombre_plato"))
                     st.session_state.messages.append({"role": "tool", "tool_call_id": tool.id, "content": res})
             
+            # Segunda llamada para que la IA lea la instrucción oculta y responda bien
             final_res = client.chat.completions.create(model="gpt-4o", messages=st.session_state.messages)
             st.session_state.messages.append({"role": "assistant", "content": final_res.choices[0].message.content})
             st.rerun()
