@@ -120,8 +120,20 @@ st.markdown("""
         color: #D4AF37 !important;
         font-weight: 700;
     }
+    
+    /* 7. ESTILO DEL TICKET (NUEVO) */
+    div[data-testid="stExpander"] {
+        border: 1px solid #8FA891;
+        border-radius: 10px;
+        background-color: #F9FBF9;
+        margin-bottom: 20px;
+    }
+    div[data-testid="stExpander"] summary {
+        color: #556B2F !important;
+        font-weight: 600;
+    }
 
-    /* 7. OCULTAR ELEMENTOS */
+    /* 8. OCULTAR ELEMENTOS */
     [data-testid="stHeader"], [data-testid="stToolbar"], footer {visibility: hidden;}
     </style>
 """, unsafe_allow_html=True)
@@ -180,17 +192,53 @@ if "messages" not in st.session_state:
         {"role": "assistant", "content": "¡Hola! 🌿 Bienvenido a **Café Chic**.\n\n¿Te apetece un **Brunch** completo 🥑 o prefieres ver opciones de almuerzo? ✨"}
     ]
 
-# Títulos
+# --- INTERFAZ PRINCIPAL ---
+
+# 1. Títulos
 st.markdown('<div class="titulo-principal">Café Chic</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitulo">Asistente Virtual</div>', unsafe_allow_html=True)
 
-# Renderizar chat
+# 2. TICKET DE COMANDA (VISIBLE EN MÓVIL Y PC) - Opción DEMO
+# Inicializamos un pedido "simulado" para mostrar funcionalidad
+if "pedido" not in st.session_state:
+    st.session_state.pedido = [
+        {"item": "🥑 Tosta Aguacate", "precio": 8.50},
+        {"item": "☕ Café Latte", "precio": 2.50},
+        {"item": "🍰 Tarta de Zanahoria", "precio": 4.50}
+    ]
+
+# Cálculos del ticket
+total_pedido = sum(p["precio"] for p in st.session_state.pedido)
+items_count = len(st.session_state.pedido)
+
+# Renderizamos el Ticket Desplegable
+with st.expander(f"🧾 TICKET ABIERTO ({items_count}) | Total: {total_pedido:.2f}€", expanded=False):
+    st.markdown("### 🛒 Tu Pedido (Simulado)")
+    for p in st.session_state.pedido:
+        st.markdown(f"- {p['item']} ... **{p['precio']:.2f}€**")
+    
+    st.markdown("---")
+    
+    col_cocina, col_pago = st.columns(2)
+    
+    with col_cocina:
+        # Enlace a WhatsApp para Cocina
+        # NOTA: Cambia el número si quieres probarlo en tu móvil real
+        texto_cocina = "👨‍🍳 *NUEVA COMANDA MESA 1*:%0A" + "%0A".join([f"- {p['item']}" for p in st.session_state.pedido])
+        url_whatsapp = f"https://wa.me/34600000000?text={texto_cocina}"
+        st.link_button("👨‍🍳 A Cocina", url_whatsapp, use_container_width=True)
+    
+    with col_pago:
+        # Enlace a Stripe (Puedes poner tu enlace real de producto aquí)
+        st.link_button("💳 Pagar Ahora", "https://stripe.com/es", use_container_width=True)
+
+# 3. Renderizar Chat
 for m in st.session_state.messages:
     if m["role"] != "system":
         with st.chat_message(m["role"], avatar="🥑" if m["role"] == "assistant" else "👤"):
             st.markdown(m["content"])
 
-# Input usuario
+# 4. Input usuario
 if prompt := st.chat_input("Ej: ¿Qué lleva la Tosta con Aguacate?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="👤"):
