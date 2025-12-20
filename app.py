@@ -1,5 +1,6 @@
 import streamlit as st
 import json
+import random
 from openai import OpenAI
 
 # --- CONFIGURACIÓN DE PÁGINA ---
@@ -18,7 +19,7 @@ except:
 
 client = OpenAI(api_key=API_KEY)
 
-# --- ESTILOS CSS (DISEÑO CHIC & LIMPIO - ANTI DARK MODE) ---
+# --- ESTILOS CSS (DISEÑO CHIC & LIMPIO) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Helvetica+Neue:wght@300;400;600&display=swap');
@@ -36,32 +37,28 @@ st.markdown("""
         box-shadow: 0 10px 30px rgba(0,0,0,0.08);
     }
 
-    /* 2. FORZAR ESTILO DEL TICKET (Cream & Gold) */
+    /* 2. TICKET (Cream & Gold) */
     div[data-testid="stExpander"] {
-        background-color: #FFFEF0 !important; /* Fondo Crema SIEMPRE */
+        background-color: #FFFEF0 !important;
         border: 1px solid #D4AF37 !important;
         border-radius: 12px;
         color: #333333 !important;
     }
-    
-    /* Encabezado del Ticket */
     div[data-testid="stExpander"] > details > summary {
         background-color: #FFFEF0 !important;
-        color: #556B2F !important; /* Texto Verde Oliva */
+        color: #556B2F !important;
         font-weight: 700 !important;
         font-size: 1.1rem !important;
         border-radius: 12px;
     }
-    
-    /* Contenido del Ticket */
     div[data-testid="stExpander"] p, 
     div[data-testid="stExpander"] div, 
     div[data-testid="stExpander"] span,
     div[data-testid="stExpander"] li {
-        color: #333333 !important; /* Texto oscuro forzado */
+        color: #333333 !important;
     }
 
-    /* 3. BOTONES PERSONALIZADOS */
+    /* 3. BOTONES */
     div.stButton > button {
         background-color: #FFFFFF !important;
         color: #333333 !important;
@@ -74,7 +71,7 @@ st.markdown("""
         color: #556B2F !important;
     }
 
-    /* Botón PEQUEÑO de Borrar (X) */
+    /* Botón Borrar (X) */
     button[key^="btn_del_"] {
         border: none !important;
         background: transparent !important;
@@ -83,7 +80,7 @@ st.markdown("""
         font-size: 1.2rem;
     }
 
-    /* Botón PRIMARIO (Pagar) -> Rojo/Salmón Vibrante */
+    /* Botón Pagar (Rojo/Salmón) */
     div.stButton > button[kind="primary"] {
         background-color: #FF6B6B !important;
         color: white !important;
@@ -95,14 +92,14 @@ st.markdown("""
         background-color: #FF5252 !important;
     }
 
-    /* Botón LINK (WhatsApp Cocina) -> Verde */
+    /* Botón WhatsApp (Verde) */
     a[href^="https://wa.me"] button {
         background-color: #25D366 !important;
         color: white !important;
         border: none !important;
     }
 
-    /* 4. CHAT ESTÉTICO */
+    /* 4. CHAT */
     .stChatMessage {
         background-color: #FFFFFF;
         border: 1px solid #EAEAEA;
@@ -123,22 +120,16 @@ st.markdown("""
         margin-bottom: 10px;
     }
 
-    /* OCULTAR ELEMENTOS NO DESEADOS */
+    /* Ocultar elementos */
     [data-testid="stHeader"], [data-testid="stToolbar"], footer {visibility: hidden;}
     </style>
 """, unsafe_allow_html=True)
 
-# --- BASE DE DATOS DEL MENÚ ---
+# --- BASE DE DATOS ---
 MENU_DB = {
-    "Tosta Aguacate": 8.50,
-    "Huevos Benedictinos": 10.50,
-    "Croissant Jamón": 5.50,
-    "Café Latte": 2.50,
-    "Cappuccino": 3.00,
-    "Zumo Naranja": 3.50,
-    "Mimosa": 6.00,
-    "Tarta Zanahoria": 4.50,
-    "Cheesecake": 5.00
+    "Tosta Aguacate": 8.50, "Huevos Benedictinos": 10.50, "Croissant Jamón": 5.50,
+    "Café Latte": 2.50, "Cappuccino": 3.00, "Zumo Naranja": 3.50,
+    "Mimosa": 6.00, "Tarta Zanahoria": 4.50, "Cheesecake": 5.00
 }
 menu_texto = ", ".join([f"{k} ({v}€)" for k,v in MENU_DB.items()])
 
@@ -147,6 +138,9 @@ if "pedido" not in st.session_state:
     st.session_state.pedido = []
 if "pagado" not in st.session_state:
     st.session_state.pagado = False
+# Generamos un ID de pedido único si no existe
+if "order_id" not in st.session_state:
+    st.session_state.order_id = f"CHIC-{random.randint(100, 999)}"
 
 # --- FUNCIONES ---
 def borrar_item(index):
@@ -175,7 +169,7 @@ tools = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "nombre_plato": {"type": "string", "description": f"Plato exacto del menú: {list(MENU_DB.keys())}"}
+                    "nombre_plato": {"type": "string", "description": f"Plato exacto: {list(MENU_DB.keys())}"}
                 },
                 "required": ["nombre_plato"],
             },
@@ -183,146 +177,125 @@ tools = [
     }
 ]
 
-# --- BARRA LATERAL ---
+# --- BARRA LATERAL (CONTROLES) ---
 with st.sidebar:
     st.markdown("### ⚙️ Demo Control")
     if st.button("🗑️ Reiniciar Todo"):
         st.session_state.pedido = []
         st.session_state.pagado = False
+        st.session_state.order_id = f"CHIC-{random.randint(100, 999)}"
         st.session_state.messages = []
         st.rerun()
 
 # --- CABECERA ---
 st.markdown('<div class="titulo-principal">Café Chic</div>', unsafe_allow_html=True)
 
-# --- TICKET DINÁMICO ---
+# --- TICKET DINÁMICO & LOGÍSTICA ---
 total = sum(p['precio'] for p in st.session_state.pedido)
 icono_ticket = "🧾" if not st.session_state.pagado else "🎟️"
-label_ticket = f"{icono_ticket} TICKET MESA 5 ({len(st.session_state.pedido)}) | Total: {total:.2f}€"
+# Mostramos el ID del pedido en el título
+label_ticket = f"{icono_ticket} TICKET #{st.session_state.order_id} ({len(st.session_state.pedido)}) | Total: {total:.2f}€"
 
-# Renderizado del Ticket
 with st.expander(label_ticket, expanded=(len(st.session_state.pedido) > 0)):
     if not st.session_state.pedido:
         st.info("👋 El ticket está vacío. Pide algo al chat.")
     else:
-        st.markdown("###### 🛒 Tu Pedido:")
+        st.markdown(f"**🆔 Pedido:** `{st.session_state.order_id}`")
+        
+        # --- SELECTOR DE MESA O BARRA ---
+        # Solo dejamos cambiarlo si no ha pagado aún
+        opciones_ubicacion = ["📍 Elige tu Mesa...", "Recogida en Barra 🙋‍♂️", "Mesa 1", "Mesa 2", "Mesa 3", "Mesa 4", "Terraza 1", "Terraza 2"]
+        ubicacion = st.selectbox("¿Dónde te lo servimos?", opciones_ubicacion, disabled=st.session_state.pagado, index=0)
+        
+        st.markdown("---")
+        st.markdown("###### 🛒 Resumen:")
         for i, p in enumerate(st.session_state.pedido):
             c1, c2, c3 = st.columns([6, 2, 1])
             c1.markdown(f"{p['item']}")
             c2.markdown(f"**{p['precio']:.2f}€**")
-            
             if not st.session_state.pagado:
                 c3.button("❌", key=f"btn_del_{i}", on_click=borrar_item, args=(i,))
         
         st.markdown("---")
         
         if not st.session_state.pagado:
-            st.caption("🔒 *Paga para enviar a cocina.*")
-            if st.button(f"💳 PAGAR {total:.2f}€", type="primary", use_container_width=True):
-                st.session_state.pagado = True
-                st.balloons()
-                st.rerun()
+            if ubicacion == "📍 Elige tu Mesa...":
+                st.warning("👇 Por favor, selecciona tu mesa o barra para pagar.")
+            else:
+                if st.button(f"💳 PAGAR {total:.2f}€", type="primary", use_container_width=True):
+                    st.session_state.pagado = True
+                    st.balloons()
+                    st.rerun()
         else:
-            st.success("✅ ¡Pago Confirmado!")
+            # PANTALLA DE ÉXITO
+            st.success(f"✅ ¡Pagado! Tu pedido `{st.session_state.order_id}` se está preparando.")
             
+            # Preparamos el mensaje de WhatsApp con la ubicación exacta
             items_str = "%0A".join([f"▪️ {p['item']}" for p in st.session_state.pedido])
-            msg_cocina = f"🔥 *COMANDA PAGADA* 🔥%0A------------------%0A{items_str}%0A------------------%0AMesa: 5%0ATotal: {total:.2f}€"
+            msg_cocina = f"🔥 *NUEVO PEDIDO PAGADO* 🔥%0A🆔 *{st.session_state.order_id}*%0A📍 *UBICACIÓN:* {ubicacion}%0A------------------%0A{items_str}%0A------------------%0ATotal: {total:.2f}€"
             link_wa = f"https://wa.me/34600000000?text={msg_cocina}"
             
-            st.link_button("👨‍🍳 ENVIAR A COCINA (WhatsApp)", link_wa, use_container_width=True)
+            st.link_button(f"👨‍🍳 ENVIAR A COCINA (WhatsApp)", link_wa, use_container_width=True)
             
             st.write("") 
-            if st.button("🔄 Pedir más"):
+            if st.button("🔄 Nuevo Pedido"):
                 st.session_state.pagado = False
+                st.session_state.order_id = f"CHIC-{random.randint(100, 999)}"
                 st.rerun()
 
 # --- CHATBOT ---
-
-# 1. Prompt del Sistema (MEJORADO PARA QUE SEA VISUAL)
 system_prompt = f"""
 Eres 'Leo', el camarero virtual experto de 'Café Chic'. 
 MENÚ Y PRECIOS: {menu_texto}
 
-🌟 TUS REGLAS DE ESTILO (SÍGUELAS SIEMPRE):
-1. **VISUAL:** Usa Emojis en casi todas las frases (🥑, 🥐, ☕, ✨, 🍾).
-2. **ESTRUCTURA:** No escribas párrafos largos. Usa listas con guiones o bullet points.
-3. **CLARIDAD:** Pon siempre los nombres de platos y precios en **negrita**.
-4. **IDIOMA:** Detecta el idioma del usuario y responde SOLO en ese idioma.
-5. **HERRAMIENTA:** Si el usuario dice "quiero X", usa la función 'agregar_al_pedido' inmediatamente.
-
-Ejemplo de respuesta ideal:
-"¡Marchando! ☕✨
-Aquí tienes lo que he anotado:
-* **Huevos Benedictinos** (10.50€) 🍳
-* **Café Latte** (2.50€) 🥛
-
-¿Te apetece añadir un **Zumo de Naranja** 🍊 para completar?"
+🌟 REGLAS:
+1. Usa Emojis (🥑, 🥐, ☕).
+2. Estructura con listas y pon platos/precios en **negrita**.
+3. Responde en el idioma del usuario.
+4. Si piden algo, usa 'agregar_al_pedido'.
 """
 
 if "messages" not in st.session_state or len(st.session_state.messages) == 0:
     st.session_state.messages = [{"role": "system", "content": system_prompt}]
 
-# 2. Renderizar Mensajes (CORREGIDO EL ERROR TYPE_ERROR)
 for m in st.session_state.messages:
-    # Verificamos si es un diccionario (lo normal) o un objeto (el error)
+    # Corrección de lectura de objeto/dict
     if isinstance(m, dict):
         role = m["role"]
         content = m.get("content", "")
     else:
-        # Si por alguna razón hay un objeto colado, lo leemos como objeto
         role = m.role
         content = m.content
 
-    # Solo mostramos mensajes de usuario y asistente (ocultamos los técnicos de 'system' o 'tool')
     if role in ["assistant", "user"] and content:
         with st.chat_message(role, avatar="🥑" if role == "assistant" else "👤"):
             st.markdown(content)
 
-# 3. Input Usuario
 if prompt := st.chat_input("Pide aquí..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="👤"):
         st.markdown(prompt)
 
-    # Llamada a GPT
     response = client.chat.completions.create(
         model="gpt-4o",
-        messages=st.session_state.messages, # Ahora pasamos la lista limpia
+        messages=st.session_state.messages, 
         tools=tools,
         tool_choice="auto"
     )
     msg = response.choices[0].message
-
-    # IMPORTANTE: Convertimos el mensaje de la IA a diccionario antes de guardarlo
-    # Esto es lo que arregla el TypeError definitivamente
-    msg_dict = {
-        "role": msg.role,
-        "content": msg.content,
-        "tool_calls": msg.tool_calls
-    }
+    msg_dict = {"role": msg.role, "content": msg.content, "tool_calls": msg.tool_calls}
 
     if msg.tool_calls:
-        st.session_state.messages.append(msg_dict) # Guardamos como diccionario
-        
+        st.session_state.messages.append(msg_dict)
         for tool in msg.tool_calls:
             if tool.function.name == "agregar_al_pedido":
                 args = json.loads(tool.function.arguments)
                 res = agregar_item(args.get("nombre_plato"))
-                
-                # Guardamos la respuesta de la herramienta
-                st.session_state.messages.append({
-                    "role": "tool", 
-                    "tool_call_id": tool.id, 
-                    "content": res
-                })
+                st.session_state.messages.append({"role": "tool", "tool_call_id": tool.id, "content": res})
         
-        # Segunda llamada para que la IA confirme verbalmente
         final_res = client.chat.completions.create(model="gpt-4o", messages=st.session_state.messages)
-        st.session_state.messages.append({
-            "role": "assistant", 
-            "content": final_res.choices[0].message.content
-        })
+        st.session_state.messages.append({"role": "assistant", "content": final_res.choices[0].message.content})
         st.rerun()
     else:
-        st.session_state.messages.append(msg_dict) # Guardamos como diccionario
+        st.session_state.messages.append(msg_dict)
         st.rerun()
