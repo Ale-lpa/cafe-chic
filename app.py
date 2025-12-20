@@ -29,7 +29,7 @@ st.markdown("""
         background-image: repeating-linear-gradient(90deg, #FFFFFF, #FFFFFF 25px, #8FA891 25px, #8FA891 50px);
     }
     
-    /* 2. CONTENEDOR PRINCIPAL (TARJETA) */
+    /* 2. CONTENEDOR PRINCIPAL */
     [data-testid="stMainBlockContainer"] {
         background-color: rgba(255, 255, 255, 0.98);
         border: 2px solid #D4AF37;
@@ -39,19 +39,19 @@ st.markdown("""
         max-width: 700px;
     }
 
-    /* 3. TÍTULOS (LO QUE FALTABA) */
+    /* 3. TÍTULOS */
     .titulo-principal {
         font-family: 'Dancing Script', cursive;
-        color: #D4AF37; /* Dorado */
+        color: #D4AF37;
         text-align: center;
-        font-size: 3.8rem; /* Bien grande */
+        font-size: 3.8rem;
         line-height: 1.1;
         margin-top: 0px;
         text-shadow: 2px 2px 0px rgba(0,0,0,0.05);
     }
     .subtitulo {
         text-align: center;
-        color: #8FA891; /* Verde Chic */
+        color: #8FA891;
         font-family: 'Helvetica Neue', sans-serif;
         font-weight: 600;
         text-transform: uppercase;
@@ -60,7 +60,7 @@ st.markdown("""
         margin-bottom: 25px;
     }
 
-    /* 4. TICKET (Color Crema y Texto Oscuro) */
+    /* 4. TICKET */
     div[data-testid="stExpander"] {
         background-color: #FFFEF0 !important;
         border: 1px solid #D4AF37 !important;
@@ -83,15 +83,13 @@ st.markdown("""
         color: #333;
         border-radius: 8px;
     }
-    div.stButton > button[kind="primary"] { /* Botón Pagar */
+    div.stButton > button[kind="primary"] {
         background-color: #FF6B6B !important;
         color: white !important;
         border: none !important;
         font-weight: bold;
         box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3);
     }
-
-    /* Botón WhatsApp */
     a[href^="https://wa.me"] button {
         background-color: #25D366 !important;
         color: white !important;
@@ -145,7 +143,9 @@ def agregar_item(nombre_plato):
                 break
     st.session_state.pedido.append({"item": nombre_plato, "precio": precio})
     st.session_state.pagado = False
-    return f"✅ Anotado: **{nombre_plato}**"
+    # --- CAMBIO IMPORTANTE: Retornamos texto neutro en inglés ---
+    # Esto permite que la IA decida cómo traducirlo al idioma del usuario
+    return f"System: {nombre_plato} added to database successfully."
 
 # --- TOOLS ---
 tools = [
@@ -174,7 +174,7 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
 
-# --- HEADER (TÍTULO RECUPERADO) ---
+# --- HEADER ---
 st.markdown('<div class="titulo-principal">Café Chic</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitulo">Asistente Virtual</div>', unsafe_allow_html=True)
 
@@ -217,15 +217,15 @@ system_prompt = f"""
 Eres 'Leo', el camarero virtual de 'Café Chic'. 
 MENÚ: {menu_texto}
 
-REGLA DE ORO (IDIOMA):
-1. Detecta el idioma del usuario (Inglés, Chino, Ruso, etc).
+🔴 REGLA SUPREMA (IDIOMAS):
+1. Detecta el idioma del usuario (Inglés, Italiano, Alemán, Chino, etc).
 2. Responde SIEMPRE en ese mismo idioma.
+3. **MUY IMPORTANTE:** Si usas la herramienta para añadir un pedido, CONFIRMA AL USUARIO EN SU IDIOMA que ha sido añadido (ej: "Perfetto! Aggiunto." en italiano, "Added!" en inglés, "Marchando" en español).
 
 ESTILO:
 - Usa emojis (🥑, ☕, ✨).
-- Sé breve y usa listas.
+- Sé breve.
 - Nombres de platos en **negrita**.
-- Si piden comida, usa la función 'agregar_al_pedido'.
 """
 
 if "messages" not in st.session_state or len(st.session_state.messages) == 0:
