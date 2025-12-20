@@ -18,245 +18,236 @@ except:
 
 client = OpenAI(api_key=API_KEY)
 
-# --- ESTILOS CSS (DISEÑO CHIC, RAYAS Y DORADO) ---
+# --- ESTILOS CSS (DISEÑO CHIC & LIMPIO) ---
 st.markdown("""
     <style>
-    /* IMPORTAR TIPOGRAFÍA */
     @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Helvetica+Neue:wght@300;400;600&display=swap');
 
-    /* 1. FONDO PRINCIPAL CON RAYAS */
+    /* 1. FONDO */
     [data-testid="stAppViewContainer"] {
-        background-color: #FFFFFF;
-        background-image: repeating-linear-gradient(
-            90deg,
-            #FFFFFF,
-            #FFFFFF 25px,
-            #8FA891 25px,
-            #8FA891 50px
-        );
+        background-image: repeating-linear-gradient(90deg, #FFFFFF, #FFFFFF 25px, #8FA891 25px, #8FA891 50px);
     }
-    
-    /* 2. CONTENEDOR PRINCIPAL */
     [data-testid="stMainBlockContainer"] {
         background-color: rgba(255, 255, 255, 0.98);
-        padding: 25px;
+        border: 2px solid #D4AF37;
         border-radius: 20px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        margin-top: 20px;
-        margin-bottom: 20px;
-        border: 2px solid #D4AF37;
-        max-width: 700px;
     }
 
-    /* 3. BARRA LATERAL */
-    section[data-testid="stSidebar"] {
-        background-color: #FFFFFF;
-        border-right: 2px solid #D4AF37;
+    /* 2. TICKET ELEGANTE */
+    div[data-testid="stExpander"] {
+        border: 1px solid #D4AF37;
+        background-color: #FFFEF0; /* Fondo crema suave */
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
     }
-    section[data-testid="stSidebar"] h1 {
-        color: #D4AF37 !important;
-        font-family: 'Dancing Script', cursive !important;
-        font-size: 2.2rem !important;
-        margin-bottom: 5px;
-    }
-    section[data-testid="stSidebar"] p, .stAlert {
+    div[data-testid="stExpander"] summary {
         color: #556B2F !important;
-        background-color: #F9FBF9 !important;
-        border: 1px solid #8FA891 !important;
-        font-size: 0.9rem;
+        font-weight: 700 !important;
+        font-size: 1.1rem !important;
     }
-    
-    /* 4. TÍTULOS */
-    .titulo-principal {
-        font-family: 'Dancing Script', cursive;
-        color: #D4AF37;
-        text-align: center;
-        font-size: 3.5rem;
-        margin-top: 0px;
-        margin-bottom: 5px;
-        line-height: 1.2;
-        text-shadow: 1px 1px 0px rgba(0,0,0,0.1);
-    }
-    .subtitulo {
-        text-align: center;
-        color: #8FA891;
-        font-family: 'Helvetica Neue', sans-serif;
-        font-weight: 600;
-        font-size: 1rem;
-        margin-bottom: 25px;
-        letter-spacing: 3px;
-        text-transform: uppercase;
+    div[data-testid="stExpander"] p, span, div {
+        color: #333333 !important; /* Texto oscuro para lectura fácil */
     }
 
-    /* 5. BURBUJAS DE CHAT */
+    /* 3. BOTONES PERSONALIZADOS */
+    /* Botón Borrar (Pequeño y sutil) */
+    button[key^="btn_del_"] {
+        border: none;
+        background: transparent;
+        color: #FF4B4B;
+        font-size: 1.2rem;
+        padding: 0;
+    }
+    button[key^="btn_del_"]:hover {
+        color: #ff0000;
+        background: transparent;
+    }
+
+    /* 4. CHAT */
     .stChatMessage {
         background-color: #FFFFFF;
-        border-radius: 18px;
-        padding: 20px 25px;
-        margin-bottom: 15px;
         border: 1px solid #EAEAEA;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        border-radius: 18px;
     }
     .stChatMessage:has([data-testid="chatAvatarIcon-assistant"]) {
         border-left: 4px solid #8FA891;
         background-color: #FDFDFD;
     }
-    .stChatMessage .stAvatar {
-        background-color: #8FA891 !important;
-        color: white !important;
-        width: 35px;
-        height: 35px;
-    }
 
-    /* 6. TEXTOS GENÉRICOS */
-    .stChatMessage p, .stChatMessage li {
-        color: #444 !important;
-        font-size: 1.05rem;
-        line-height: 1.6;
-        margin-bottom: 8px;
-        font-family: 'Helvetica Neue', sans-serif;
-    }
-    .stChatMessage strong {
-        color: #D4AF37 !important;
-        font-weight: 700;
-    }
-    
-    /* 7. ESTILO DEL TICKET (CORREGIDO Y MEJORADO) */
-    div[data-testid="stExpander"] {
-        border: 2px solid #D4AF37; /* Borde dorado */
-        border-radius: 12px;
-        background-color: #FFFEF0; /* Fondo crema muy suave */
-        margin-bottom: 20px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
-    div[data-testid="stExpander"] summary {
-        color: #556B2F !important; /* Verde oliva para el título */
-        font-weight: 700 !important;
-        font-size: 1.1rem !important;
-    }
-    /* ESTO ES LO QUE ARREGLA EL TEXTO BLANCO: */
-    div[data-testid="stExpander"] p, 
-    div[data-testid="stExpander"] li, 
-    div[data-testid="stExpander"] span,
-    div[data-testid="stExpander"] div {
-        color: #333333 !important; /* Texto gris oscuro forzado */
-    }
-
-    /* 8. OCULTAR ELEMENTOS NO DESEADOS */
+    /* OCULTAR ELEMENTOS SOBRANTES */
     [data-testid="stHeader"], [data-testid="stToolbar"], footer {visibility: hidden;}
+    
+    /* TÍTULOS */
+    .titulo-principal {
+        font-family: 'Dancing Script', cursive;
+        color: #D4AF37;
+        text-align: center;
+        font-size: 3.5rem;
+        line-height: 1;
+        margin-bottom: 10px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# --- DATOS ---
-@st.cache_data
-def cargar_menu():
-    try:
-        with open('menu_maestro.json', 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except: return []
+# --- BASE DE DATOS DEL MENÚ (Precios Reales) ---
+MENU_DB = {
+    "Tosta Aguacate": 8.50,
+    "Huevos Benedictinos": 10.50,
+    "Croissant Jamón": 5.50,
+    "Café Latte": 2.50,
+    "Cappuccino": 3.00,
+    "Zumo Naranja": 3.50,
+    "Mimosa": 6.00,
+    "Tarta Zanahoria": 4.50,
+    "Cheesecake": 5.00
+}
+menu_texto = ", ".join([f"{k} ({v}€)" for k,v in MENU_DB.items()])
 
-menu_data = cargar_menu()
-menu_texto = json.dumps(menu_data, ensure_ascii=False)
-
-# --- BARRA LATERAL ---
-with st.sidebar:
-    st.markdown("<h1>Café Chic</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; font-size: 0.8rem; color: #8FA891 !important; margin-top:-10px;'>RESTAURANTE & BRUNCH</p>", unsafe_allow_html=True)
-    st.markdown("---")
-    
-    st.markdown("**🕒 Horario**")
-    st.success("""
-    L-X: 10-16h | J-V: 10-23h
-    Sáb: 11-17h | Dom: CERRADO
-    """)
-    
-    st.markdown("**📞 Reservas**")
-    st.info("682 27 26 51")
-    st.caption("📍 C/ Mendizábal, 39 - Vegueta")
-
-# --- CHAT (CEREBRO POLÍGLOTA & ESTILOSO) ---
-system_prompt = f"""
-Eres el "Concierge Digital" de 'Café Chic', un espacio de brunch y comida elegante.
-MENÚ DISPONIBLE: {menu_texto}
-
-🌟 **TU PERSONALIDAD Y ESTILO:**
-1. **Sofisticado pero cercano:** Usa un tono amable, elegante y muy servicial.
-2. **Visualmente Atractivo:** Usa emojis elegantes (🌿, 🥑, ✨, 🥂, 🥐, ☕) en casi todas tus frases, pero con gusto, sin saturar.
-3. **Vendedor Nato:** No digas "tenemos huevos", di "te sugiero nuestros Huevos Benedictinos con salsa holandesa casera 🍳✨".
-
-🛑 **REGLA DE ORO (IDIOMAS):**
-1. DETECTA el idioma del usuario.
-2. RESPONDE ESTRICTAMENTE en ese mismo idioma (Inglés 🇬🇧, Japonés 🇯🇵, Ruso 🇷🇺, etc.).
-
-💡 **DIRECTRICES DE RESPUESTA:**
-- Usa **negritas** para resaltar los nombres de los platos y los precios.
-- Si preguntan precios, responde siempre en EUROS (€).
-- Al final, sugiere siempre una bebida o un postre para acompañar ("¿Te apetece acompañarlo con un Mimosa fresquito? 🥂").
-"""
-
-if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "assistant", "content": "¡Hola! 🌿 Bienvenido a **Café Chic**.\n\nSoy tu asistente personal hoy. ¿Te apetece comenzar con un delicioso **Brunch** 🥑 o prefieres explorar nuestra carta de almuerzos? ✨"}
-    ]
-
-# --- INTERFAZ PRINCIPAL ---
-
-# 1. Títulos
-st.markdown('<div class="titulo-principal">Café Chic</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitulo">Asistente Virtual</div>', unsafe_allow_html=True)
-
-# 2. TICKET DE COMANDA (VISIBLE EN MÓVIL Y PC) - Opción DEMO
-# Inicializamos un pedido "simulado" para mostrar funcionalidad
+# --- GESTIÓN DE ESTADO ---
 if "pedido" not in st.session_state:
-    st.session_state.pedido = [
-        {"item": "🥑 Tosta Aguacate", "precio": 8.50},
-        {"item": "☕ Café Latte", "precio": 2.50},
-        {"item": "🍰 Tarta de Zanahoria", "precio": 4.50}
+    st.session_state.pedido = []
+if "pagado" not in st.session_state:
+    st.session_state.pagado = False
+
+# --- FUNCIONES ---
+def borrar_item(index):
+    st.session_state.pedido.pop(index)
+    # Si borras algo, asumimos que cambia el pedido y hay que pagar de nuevo si ya estaba pagado
+    st.session_state.pagado = False 
+
+def agregar_item(nombre_plato):
+    precio = MENU_DB.get(nombre_plato, 0.0)
+    # Búsqueda aproximada si no es exacto
+    if precio == 0.0:
+        for k, v in MENU_DB.items():
+            if k.lower() in nombre_plato.lower():
+                nombre_plato = k
+                precio = v
+                break
+    
+    st.session_state.pedido.append({"item": nombre_plato, "precio": precio})
+    st.session_state.pagado = False # Al añadir algo nuevo, el estado vuelve a "No Pagado"
+    return f"Añadido {nombre_plato}."
+
+# --- HERRAMIENTAS IA ---
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "agregar_al_pedido",
+            "description": "Añade un plato al ticket.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "nombre_plato": {"type": "string", "description": f"Plato exacto del menú: {list(MENU_DB.keys())}"}
+                },
+                "required": ["nombre_plato"],
+            },
+        }
+    }
+]
+
+# --- INTERFAZ BARRA LATERAL (DEBUG) ---
+with st.sidebar:
+    st.markdown("### ⚙️ Panel de Control")
+    if st.button("🗑️ Reiniciar Demo"):
+        st.session_state.pedido = []
+        st.session_state.pagado = False
+        st.session_state.messages = []
+        st.rerun()
+
+# --- CABECERA ---
+st.markdown('<div class="titulo-principal">Café Chic</div>', unsafe_allow_html=True)
+
+# --- TICKET DINÁMICO (LA JOYA DE LA CORONA) ---
+total = sum(p['precio'] for p in st.session_state.pedido)
+estado_pago = "✅ PAGADO" if st.session_state.pagado else "⏳ PENDIENTE"
+icono_ticket = "🧾" if not st.session_state.pagado else "🎟️"
+
+label_ticket = f"{icono_ticket} TICKET MESA 5 ({len(st.session_state.pedido)}) | Total: {total:.2f}€"
+
+with st.expander(label_ticket, expanded=(len(st.session_state.pedido) > 0)):
+    if not st.session_state.pedido:
+        st.info("👋 El ticket está vacío. Pide algo al chat (ej: 'Quiero un café').")
+    else:
+        # 1. LISTADO DE PRODUCTOS
+        st.markdown("###### 🛒 Resumen del pedido:")
+        for i, p in enumerate(st.session_state.pedido):
+            c1, c2, c3 = st.columns([6, 2, 1])
+            c1.markdown(f"{p['item']}")
+            c2.markdown(f"**{p['precio']:.2f}€**")
+            
+            # Botón Borrar (Solo si no está pagado, para evitar líos)
+            if not st.session_state.pagado:
+                c3.button("❌", key=f"btn_del_{i}", on_click=borrar_item, args=(i,))
+        
+        st.markdown("---")
+        
+        # 2. ZONA DE ACCIÓN (PAGO -> COCINA)
+        col_accion = st.container()
+        
+        if not st.session_state.pagado:
+            # FASE 1: PAGAR
+            st.caption("🔒 *La comanda se enviará a cocina automáticamente tras el pago.*")
+            if st.button(f"💳 PAGAR {total:.2f}€ AHORA", type="primary", use_container_width=True):
+                st.session_state.pagado = True
+                st.balloons() # ¡FIESTA!
+                st.rerun()
+        else:
+            # FASE 2: ENVIAR A COCINA (WhatsApp)
+            st.success("✅ ¡Pago Confirmado! El pedido está listo para marchar.")
+            
+            items_str = "%0A".join([f"▪️ {p['item']}" for p in st.session_state.pedido])
+            msg_cocina = f"🔥 *NUEVA COMANDA PAGADA* 🔥%0A------------------%0A{items_str}%0A------------------%0AMesa: 5%0ATotal: {total:.2f}€"
+            link_wa = f"https://wa.me/34600000000?text={msg_cocina}"
+            
+            st.link_button("👨‍🍳 ENVIAR A COCINA (WhatsApp)", link_wa, use_container_width=True)
+            
+            if st.button("🔄 Nuevo Pedido / Añadir más"):
+                st.session_state.pagado = False
+                st.rerun()
+
+# --- CHATBOT ---
+if "messages" not in st.session_state or len(st.session_state.messages) == 0:
+    st.session_state.messages = [
+        {"role": "system", "content": f"Eres un camarero experto. Menú: {menu_texto}. Si piden algo, usa 'agregar_al_pedido'. Idioma: Detecta y responde igual."}
     ]
 
-# Cálculos del ticket
-total_pedido = sum(p["precio"] for p in st.session_state.pedido)
-items_count = len(st.session_state.pedido)
-
-# Renderizamos el Ticket Desplegable
-with st.expander(f"🧾 TICKET ABIERTO ({items_count}) | Total: {total_pedido:.2f}€", expanded=False):
-    st.markdown("### 🛒 Tu Pedido (Simulado)")
-    for p in st.session_state.pedido:
-        st.markdown(f"- {p['item']} ... **{p['precio']:.2f}€**")
-    
-    st.markdown("---")
-    
-    col_cocina, col_pago = st.columns(2)
-    
-    with col_cocina:
-        # Enlace a WhatsApp para Cocina
-        # NOTA: Cambia el número si quieres probarlo en tu móvil real
-        texto_cocina = "👨‍🍳 *NUEVA COMANDA MESA 1*:%0A" + "%0A".join([f"- {p['item']}" for p in st.session_state.pedido])
-        url_whatsapp = f"https://wa.me/34600000000?text={texto_cocina}"
-        st.link_button("👨‍🍳 A Cocina", url_whatsapp, use_container_width=True)
-    
-    with col_pago:
-        # Enlace a Stripe (Puedes poner tu enlace real de producto aquí)
-        st.link_button("💳 Pagar Ahora", "https://stripe.com/es", use_container_width=True)
-
-# 3. Renderizar Chat
+# Renderizar chat
 for m in st.session_state.messages:
-    if m["role"] != "system":
+    if m["role"] in ["assistant", "user"]:
         with st.chat_message(m["role"], avatar="🥑" if m["role"] == "assistant" else "👤"):
             st.markdown(m["content"])
 
-# 4. Input usuario
-if prompt := st.chat_input("Ej: ¿Qué me recomiendas para desayunar?"):
+# Input
+if prompt := st.chat_input("Pide aquí (ej: Un café y una tarta)"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="👤"):
         st.markdown(prompt)
-    
-    with st.chat_message("assistant", avatar="🥑"):
-        stream = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
-            stream=True
-        )
-        response = st.write_stream(stream)
-    st.session_state.messages.append({"role": "assistant", "content": response})
+
+    # Llamada a GPT
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=st.session_state.messages,
+        tools=tools,
+        tool_choice="auto"
+    )
+    msg = response.choices[0].message
+
+    # ¿Usó herramienta?
+    if msg.tool_calls:
+        st.session_state.messages.append(msg)
+        for tool in msg.tool_calls:
+            if tool.function.name == "agregar_al_pedido":
+                args = json.loads(tool.function.arguments)
+                res = agregar_item(args.get("nombre_plato"))
+                st.session_state.messages.append({"role": "tool", "tool_call_id": tool.id, "content": res})
+        
+        # Respuesta final tras añadir
+        final_res = client.chat.completions.create(model="gpt-4o", messages=st.session_state.messages)
+        st.session_state.messages.append({"role": "assistant", "content": final_res.choices[0].message.content})
+        st.rerun()
+    else:
+        st.session_state.messages.append({"role": "assistant", "content": msg.content})
+        st.rerun()
