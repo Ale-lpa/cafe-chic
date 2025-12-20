@@ -109,6 +109,20 @@ st.markdown("""
         color: #444444 !important;
         line-height: 1.6;
     }
+    
+    /* 5. BARRA LATERAL */
+    section[data-testid="stSidebar"] h1 {
+        color: #D4AF37 !important;
+        font-family: 'Dancing Script', cursive !important;
+        font-size: 2.2rem !important;
+        margin-bottom: 5px;
+    }
+    section[data-testid="stSidebar"] p, .stAlert {
+        color: #556B2F !important;
+        background-color: #F9FBF9 !important;
+        border: 1px solid #8FA891 !important;
+        font-size: 0.9rem;
+    }
 
     /* TÍTULOS */
     .titulo-principal {
@@ -157,7 +171,7 @@ def agregar_item(nombre_plato):
                 break
     st.session_state.pedido.append({"item": nombre_plato, "precio": precio})
     st.session_state.pagado = False
-    return f"✅ ¡Hecho! He añadido **{nombre_plato}** a tu cuenta."
+    return f"✅ OK: **{nombre_plato}** added/añadido."
 
 # --- HERRAMIENTAS IA ---
 tools = [
@@ -177,9 +191,24 @@ tools = [
     }
 ]
 
-# --- BARRA LATERAL (CONTROLES) ---
+# --- BARRA LATERAL (RECUPERADA Y CORREGIDA) ---
 with st.sidebar:
-    st.markdown("### ⚙️ Demo Control")
+    st.markdown("<h1>Café Chic</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 0.8rem; color: #8FA891 !important; margin-top:-10px;'>RESTAURANTE & BRUNCH</p>", unsafe_allow_html=True)
+    st.markdown("---")
+    
+    st.markdown("**🕒 Horario**")
+    st.success("""
+    L-X: 10-16h | J-V: 10-23h
+    Sáb: 11-17h | Dom: CERRADO
+    """)
+    
+    st.markdown("**📞 Reservas**")
+    st.info("682 27 26 51")
+    st.caption("📍 C/ Mendizábal, 39 - Vegueta")
+    
+    st.markdown("---")
+    st.markdown("### ⚙️ Demo")
     if st.button("🗑️ Reiniciar Todo"):
         st.session_state.pedido = []
         st.session_state.pagado = False
@@ -248,11 +277,16 @@ system_prompt = f"""
 Eres 'Leo', el camarero virtual experto de 'Café Chic'. 
 MENÚ Y PRECIOS: {menu_texto}
 
-🌟 REGLAS:
+🛑 INSTRUCCIÓN DE IDIOMA CRÍTICA (POLYGLOT MODE):
+1. **DETECTA EL IDIOMA DEL USUARIO.**
+2. SI EL USUARIO HABLA EN INGLÉS -> **RESPONDE EN INGLÉS**.
+3. SI EL USUARIO HABLA EN ESPAÑOL -> RESPONDE EN ESPAÑOL.
+4. NO mezcles idiomas. Mantenlo nativo.
+
+🌟 ESTILO:
 1. Usa Emojis (🥑, 🥐, ☕).
 2. Estructura con listas y pon platos/precios en **negrita**.
-3. Responde en el idioma del usuario.
-4. Si piden algo, usa 'agregar_al_pedido'.
+3. Si piden algo, usa 'agregar_al_pedido'.
 """
 
 if "messages" not in st.session_state or len(st.session_state.messages) == 0:
@@ -271,7 +305,7 @@ for m in st.session_state.messages:
         with st.chat_message(role, avatar="🥑" if role == "assistant" else "👤"):
             st.markdown(content)
 
-if prompt := st.chat_input("Pide aquí..."):
+if prompt := st.chat_input("Pide aquí / Order here..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="👤"):
         st.markdown(prompt)
