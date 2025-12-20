@@ -44,16 +44,13 @@ st.markdown("""
         color: #333333 !important;
     }
     
-    /* Encabezado del Ticket (Evitar que se ponga negro) */
+    /* Encabezado del Ticket */
     div[data-testid="stExpander"] > details > summary {
         background-color: #FFFEF0 !important;
         color: #556B2F !important; /* Texto Verde Oliva */
         font-weight: 700 !important;
         font-size: 1.1rem !important;
         border-radius: 12px;
-    }
-    div[data-testid="stExpander"] > details[open] > summary {
-        border-bottom: 1px solid #EAEAEA;
     }
     
     /* Contenido del Ticket */
@@ -65,8 +62,6 @@ st.markdown("""
     }
 
     /* 3. BOTONES PERSONALIZADOS */
-    
-    /* Botones Normales (Borrar, Reiniciar) -> Blancos y Dorados */
     div.stButton > button {
         background-color: #FFFFFF !important;
         color: #333333 !important;
@@ -85,6 +80,7 @@ st.markdown("""
         background: transparent !important;
         color: #FF4B4B !important;
         font-weight: bold;
+        font-size: 1.2rem;
     }
 
     /* Botón PRIMARIO (Pagar) -> Rojo/Salmón Vibrante */
@@ -100,20 +96,13 @@ st.markdown("""
     }
 
     /* Botón LINK (WhatsApp Cocina) -> Verde */
-    a[href^="https://wa.me"] {
+    a[href^="https://wa.me"] button {
         background-color: #25D366 !important;
         color: white !important;
         border: none !important;
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        text-decoration: none;
-        display: block;
-        text-align: center;
-        font-weight: 600;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
-    /* 4. CHAT */
+    /* 4. CHAT ESTÉTICO */
     .stChatMessage {
         background-color: #FFFFFF;
         border: 1px solid #EAEAEA;
@@ -121,6 +110,7 @@ st.markdown("""
     }
     .stChatMessage p {
         color: #444444 !important;
+        line-height: 1.6;
     }
 
     /* TÍTULOS */
@@ -173,7 +163,7 @@ def agregar_item(nombre_plato):
                 break
     st.session_state.pedido.append({"item": nombre_plato, "precio": precio})
     st.session_state.pagado = False
-    return f"Añadido {nombre_plato}."
+    return f"✅ ¡Hecho! He añadido **{nombre_plato}** a tu cuenta."
 
 # --- HERRAMIENTAS IA ---
 tools = [
@@ -195,7 +185,7 @@ tools = [
 
 # --- BARRA LATERAL ---
 with st.sidebar:
-    st.markdown("### ⚙️ Demo")
+    st.markdown("### ⚙️ Demo Control")
     if st.button("🗑️ Reiniciar Todo"):
         st.session_state.pedido = []
         st.session_state.pagado = False
@@ -239,48 +229,100 @@ with st.expander(label_ticket, expanded=(len(st.session_state.pedido) > 0)):
             msg_cocina = f"🔥 *COMANDA PAGADA* 🔥%0A------------------%0A{items_str}%0A------------------%0AMesa: 5%0ATotal: {total:.2f}€"
             link_wa = f"https://wa.me/34600000000?text={msg_cocina}"
             
-            st.markdown(f'<a href="{link_wa}" target="_blank" style="text-decoration:none;"><button style="background-color:#25D366; color:white; border:none; padding:10px; width:100%; border-radius:8px; font-weight:bold; font-size:16px;">👨‍🍳 ENVIAR A COCINA (WhatsApp)</button></a>', unsafe_allow_html=True)
+            st.link_button("👨‍🍳 ENVIAR A COCINA (WhatsApp)", link_wa, use_container_width=True)
             
-            st.write("") # Espacio
+            st.write("") 
             if st.button("🔄 Pedir más"):
                 st.session_state.pagado = False
                 st.rerun()
 
 # --- CHATBOT ---
+
+# 1. Prompt del Sistema (MEJORADO PARA QUE SEA VISUAL)
+system_prompt = f"""
+Eres 'Leo', el camarero virtual experto de 'Café Chic'. 
+MENÚ Y PRECIOS: {menu_texto}
+
+🌟 TUS REGLAS DE ESTILO (SÍGUELAS SIEMPRE):
+1. **VISUAL:** Usa Emojis en casi todas las frases (🥑, 🥐, ☕, ✨, 🍾).
+2. **ESTRUCTURA:** No escribas párrafos largos. Usa listas con guiones o bullet points.
+3. **CLARIDAD:** Pon siempre los nombres de platos y precios en **negrita**.
+4. **IDIOMA:** Detecta el idioma del usuario y responde SOLO en ese idioma.
+5. **HERRAMIENTA:** Si el usuario dice "quiero X", usa la función 'agregar_al_pedido' inmediatamente.
+
+Ejemplo de respuesta ideal:
+"¡Marchando! ☕✨
+Aquí tienes lo que he anotado:
+* **Huevos Benedictinos** (10.50€) 🍳
+* **Café Latte** (2.50€) 🥛
+
+¿Te apetece añadir un **Zumo de Naranja** 🍊 para completar?"
+"""
+
 if "messages" not in st.session_state or len(st.session_state.messages) == 0:
-    st.session_state.messages = [
-        {"role": "system", "content": f"Eres un camarero. Menú: {menu_texto}. Si piden, usa 'agregar_al_pedido'. Idioma: Detecta y responde igual."}
-    ]
+    st.session_state.messages = [{"role": "system", "content": system_prompt}]
 
+# 2. Renderizar Mensajes (CORREGIDO EL ERROR TYPE_ERROR)
 for m in st.session_state.messages:
-    if m["role"] in ["assistant", "user"]:
-        with st.chat_message(m["role"], avatar="🥑" if m["role"] == "assistant" else "👤"):
-            st.markdown(m["content"])
+    # Verificamos si es un diccionario (lo normal) o un objeto (el error)
+    if isinstance(m, dict):
+        role = m["role"]
+        content = m.get("content", "")
+    else:
+        # Si por alguna razón hay un objeto colado, lo leemos como objeto
+        role = m.role
+        content = m.content
 
+    # Solo mostramos mensajes de usuario y asistente (ocultamos los técnicos de 'system' o 'tool')
+    if role in ["assistant", "user"] and content:
+        with st.chat_message(role, avatar="🥑" if role == "assistant" else "👤"):
+            st.markdown(content)
+
+# 3. Input Usuario
 if prompt := st.chat_input("Pide aquí..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="👤"):
         st.markdown(prompt)
 
+    # Llamada a GPT
     response = client.chat.completions.create(
         model="gpt-4o",
-        messages=st.session_state.messages,
+        messages=st.session_state.messages, # Ahora pasamos la lista limpia
         tools=tools,
         tool_choice="auto"
     )
     msg = response.choices[0].message
 
+    # IMPORTANTE: Convertimos el mensaje de la IA a diccionario antes de guardarlo
+    # Esto es lo que arregla el TypeError definitivamente
+    msg_dict = {
+        "role": msg.role,
+        "content": msg.content,
+        "tool_calls": msg.tool_calls
+    }
+
     if msg.tool_calls:
-        st.session_state.messages.append(msg)
+        st.session_state.messages.append(msg_dict) # Guardamos como diccionario
+        
         for tool in msg.tool_calls:
             if tool.function.name == "agregar_al_pedido":
                 args = json.loads(tool.function.arguments)
                 res = agregar_item(args.get("nombre_plato"))
-                st.session_state.messages.append({"role": "tool", "tool_call_id": tool.id, "content": res})
+                
+                # Guardamos la respuesta de la herramienta
+                st.session_state.messages.append({
+                    "role": "tool", 
+                    "tool_call_id": tool.id, 
+                    "content": res
+                })
         
+        # Segunda llamada para que la IA confirme verbalmente
         final_res = client.chat.completions.create(model="gpt-4o", messages=st.session_state.messages)
-        st.session_state.messages.append({"role": "assistant", "content": final_res.choices[0].message.content})
+        st.session_state.messages.append({
+            "role": "assistant", 
+            "content": final_res.choices[0].message.content
+        })
         st.rerun()
     else:
-        st.session_state.messages.append({"role": "assistant", "content": msg.content})
+        st.session_state.messages.append(msg_dict) # Guardamos como diccionario
         st.rerun()
