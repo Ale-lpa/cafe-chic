@@ -108,7 +108,7 @@ st.markdown("""
         height: 35px;
     }
 
-    /* 6. TEXTOS */
+    /* 6. TEXTOS GENÉRICOS */
     .stChatMessage p, .stChatMessage li {
         color: #444 !important;
         font-size: 1.05rem;
@@ -121,19 +121,28 @@ st.markdown("""
         font-weight: 700;
     }
     
-    /* 7. ESTILO DEL TICKET (NUEVO) */
+    /* 7. ESTILO DEL TICKET (CORREGIDO Y MEJORADO) */
     div[data-testid="stExpander"] {
-        border: 1px solid #8FA891;
-        border-radius: 10px;
-        background-color: #F9FBF9;
+        border: 2px solid #D4AF37; /* Borde dorado */
+        border-radius: 12px;
+        background-color: #FFFEF0; /* Fondo crema muy suave */
         margin-bottom: 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
     div[data-testid="stExpander"] summary {
-        color: #556B2F !important;
-        font-weight: 600;
+        color: #556B2F !important; /* Verde oliva para el título */
+        font-weight: 700 !important;
+        font-size: 1.1rem !important;
+    }
+    /* ESTO ES LO QUE ARREGLA EL TEXTO BLANCO: */
+    div[data-testid="stExpander"] p, 
+    div[data-testid="stExpander"] li, 
+    div[data-testid="stExpander"] span,
+    div[data-testid="stExpander"] div {
+        color: #333333 !important; /* Texto gris oscuro forzado */
     }
 
-    /* 8. OCULTAR ELEMENTOS */
+    /* 8. OCULTAR ELEMENTOS NO DESEADOS */
     [data-testid="stHeader"], [data-testid="stToolbar"], footer {visibility: hidden;}
     </style>
 """, unsafe_allow_html=True)
@@ -165,31 +174,30 @@ with st.sidebar:
     st.info("682 27 26 51")
     st.caption("📍 C/ Mendizábal, 39 - Vegueta")
 
-# --- CHAT (CEREBRO POLÍGLOTA UNIVERSAL) ---
+# --- CHAT (CEREBRO POLÍGLOTA & ESTILOSO) ---
 system_prompt = f"""
-Actúa como el asistente experto de 'Café Chic'.
-MENÚ: {menu_texto}
+Eres el "Concierge Digital" de 'Café Chic', un espacio de brunch y comida elegante.
+MENÚ DISPONIBLE: {menu_texto}
 
-🛑 REGLA SUPREMA DE IDIOMA:
-Tu misión es derribar barreras lingüísticas.
+🌟 **TU PERSONALIDAD Y ESTILO:**
+1. **Sofisticado pero cercano:** Usa un tono amable, elegante y muy servicial.
+2. **Visualmente Atractivo:** Usa emojis elegantes (🌿, 🥑, ✨, 🥂, 🥐, ☕) en casi todas tus frases, pero con gusto, sin saturar.
+3. **Vendedor Nato:** No digas "tenemos huevos", di "te sugiero nuestros Huevos Benedictinos con salsa holandesa casera 🍳✨".
+
+🛑 **REGLA DE ORO (IDIOMAS):**
 1. DETECTA el idioma del usuario.
-2. RESPONDE ESTRICTAMENTE en ese mismo idioma.
-   - Si es Inglés -> Inglés 🇬🇧
-   - Si es Japonés -> Japonés 🇯🇵
-   - Si es Chino -> Chino 🇨🇳
-   - Si es Ruso -> Ruso 🇷🇺
-   - CUALQUIER OTRO -> Responde en el idioma del usuario.
+2. RESPONDE ESTRICTAMENTE en ese mismo idioma (Inglés 🇬🇧, Japonés 🇯🇵, Ruso 🇷🇺, etc.).
 
-GUIDELINES:
-1. **TRADUCCIÓN:** Explica los ingredientes de los platos para que un extranjero entienda qué es (ej: "Tortilla" -> Spanish potato omelet).
-2. **MONEDA:** Siempre en EUROS (€).
-3. **VENTA:** Recomienda siempre una bebida o postre.
+💡 **DIRECTRICES DE RESPUESTA:**
+- Usa **negritas** para resaltar los nombres de los platos y los precios.
+- Si preguntan precios, responde siempre en EUROS (€).
+- Al final, sugiere siempre una bebida o un postre para acompañar ("¿Te apetece acompañarlo con un Mimosa fresquito? 🥂").
 """
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "assistant", "content": "¡Hola! 🌿 Bienvenido a **Café Chic**.\n\n¿Te apetece un **Brunch** completo 🥑 o prefieres ver opciones de almuerzo? ✨"}
+        {"role": "assistant", "content": "¡Hola! 🌿 Bienvenido a **Café Chic**.\n\nSoy tu asistente personal hoy. ¿Te apetece comenzar con un delicioso **Brunch** 🥑 o prefieres explorar nuestra carta de almuerzos? ✨"}
     ]
 
 # --- INTERFAZ PRINCIPAL ---
@@ -239,7 +247,7 @@ for m in st.session_state.messages:
             st.markdown(m["content"])
 
 # 4. Input usuario
-if prompt := st.chat_input("Ej: ¿Qué lleva la Tosta con Aguacate?"):
+if prompt := st.chat_input("Ej: ¿Qué me recomiendas para desayunar?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="👤"):
         st.markdown(prompt)
