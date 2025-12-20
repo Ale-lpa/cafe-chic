@@ -18,7 +18,7 @@ except:
 
 client = OpenAI(api_key=API_KEY)
 
-# --- ESTILOS CSS (DISEÑO PREMIUM) ---
+# --- ESTILOS CSS (DISEÑO PREMIUM - NO TOCAR) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Helvetica+Neue:wght@300;400;600&display=swap');
@@ -39,7 +39,7 @@ st.markdown("""
         max-width: 700px;
     }
 
-    /* 3. TÍTULOS */
+    /* 3. TÍTULOS (CORREGIDO) */
     .titulo-principal {
         font-family: 'Dancing Script', cursive;
         color: #D4AF37;
@@ -143,9 +143,8 @@ def agregar_item(nombre_plato):
                 break
     st.session_state.pedido.append({"item": nombre_plato, "precio": precio})
     st.session_state.pagado = False
-    # --- CAMBIO IMPORTANTE: Retornamos texto neutro en inglés ---
-    # Esto permite que la IA decida cómo traducirlo al idioma del usuario
-    return f"System: {nombre_plato} added to database successfully."
+    # Devolvemos un mensaje neutro en inglés para que la IA lo traduzca
+    return f"System: Item '{nombre_plato}' added to bill."
 
 # --- TOOLS ---
 tools = [
@@ -174,7 +173,8 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
 
-# --- HEADER ---
+# --- HEADER (TÍTULO) ---
+# Esto asegura que el título siempre salga
 st.markdown('<div class="titulo-principal">Café Chic</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitulo">Asistente Virtual</div>', unsafe_allow_html=True)
 
@@ -212,20 +212,25 @@ with st.expander(label_ticket, expanded=(len(st.session_state.pedido) > 0)):
                 st.session_state.pagado = False
                 st.rerun()
 
-# --- CHATBOT ---
+# --- CHATBOT (CEREBRO) ---
 system_prompt = f"""
 Eres 'Leo', el camarero virtual de 'Café Chic'. 
 MENÚ: {menu_texto}
 
-🔴 REGLA SUPREMA (IDIOMAS):
-1. Detecta el idioma del usuario (Inglés, Italiano, Alemán, Chino, etc).
+🔴 REGLA 1 (IDIOMA):
+1. Detecta el idioma del usuario (Italiano, Inglés, Alemán, etc).
 2. Responde SIEMPRE en ese mismo idioma.
-3. **MUY IMPORTANTE:** Si usas la herramienta para añadir un pedido, CONFIRMA AL USUARIO EN SU IDIOMA que ha sido añadido (ej: "Perfetto! Aggiunto." en italiano, "Added!" en inglés, "Marchando" en español).
+
+🔴 REGLA 2 (TRADUCCIÓN DE PLATOS):
+Cuando menciones un plato en tu respuesta, **TRADÚCELO** al idioma del usuario si es necesario para que suene natural.
+(Ej: Si hablas italiano, di "Toast all'avocado" en lugar de "Tosta Aguacate").
+
+🔴 REGLA 3 (VENTA):
+**SIEMPRE** sugiere un acompañamiento (Bebida o Postre) que vaya bien con lo que han pedido. ¡Tienes que vender!
 
 ESTILO:
 - Usa emojis (🥑, ☕, ✨).
-- Sé breve.
-- Nombres de platos en **negrita**.
+- Sé breve y amable.
 """
 
 if "messages" not in st.session_state or len(st.session_state.messages) == 0:
