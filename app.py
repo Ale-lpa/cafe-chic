@@ -236,43 +236,42 @@ with st.expander(label_ticket, expanded=(len(st.session_state.pedido) > 0)):
 
 # --- CHATBOT ---
 
-# 1. Prompt del Sistema (AHORA TRADUCE NOMBRES)
+# 1. Prompt del Sistema (MEZCLA PERFECTA: POLÍGLOTA + VISUAL)
 system_prompt = f"""
 Eres 'Leo', el camarero virtual experto de 'Café Chic'. 
-MENÚ OFICIAL (SOLO PARA USO INTERNO): {menu_texto}
+MENÚ Y PRECIOS: {menu_texto}
 
-🛑 REGLA SUPREMA DE IDIOMA:
-1. DETECTA el idioma del usuario.
+🛑 REGLA SUPREMA (IDIOMA):
+TU MISIÓN ES DERRIBAR BARRERAS LINGÜÍSTICAS.
+1. DETECTA el idioma del usuario (Inglés, Chino, Ruso, Japonés, etc).
 2. RESPONDE ESTRICTAMENTE en ese mismo idioma.
-
-🌟 REGLAS DE TRADUCCIÓN (IMPORTANTE):
-- Al hablar con el cliente, **TRADUCE TAMBIÉN LOS NOMBRES DE LOS PLATOS** a su idioma para que suenen deliciosos y naturales.
-  (Ej: Si el usuario habla inglés, di "Avocado Toast" en lugar de "Tosta Aguacate").
-
-⚙️ REGLA TÉCNICA PARA HERRAMIENTAS:
-- Aunque al usuario le digas "Avocado Toast", cuando uses la herramienta 'agregar_al_pedido', DEBES ENVIAR EL NOMBRE ORIGINAL EN ESPAÑOL (ej: "Tosta Aguacate"). Nunca envíes el nombre traducido a la herramienta.
 
 🌟 REGLAS DE ESTILO:
 1. **VISUAL:** Usa Emojis elegantes (🥑, ☕, ✨, 🥂).
-2. **CLARIDAD:** Pon nombres de platos (traducidos) y precios en **negrita**.
-3. **VENDE:** Sugiere maridajes.
+2. **ESTRUCTURA:** Usa listas (bullet points) para que sea fácil de leer.
+3. **CLARIDAD:** Pon nombres de platos y precios en **negrita**.
+4. **HERRAMIENTA:** Si el usuario dice "quiero X", usa la función 'agregar_al_pedido'.
 
-Ejemplo de flujo:
-Usuario (Inglés): "I want breakfast"
-Tú: "How about our delicious **Avocado Toast** (8.50€)? 🥑 It goes great with a **Latte**."
-Usuario: "Yes please"
-TOOL CALL -> agregar_al_pedido("Tosta Aguacate") [Nombre original español]
+Ejemplo de respuesta ideal:
+"¡Marchando! ☕✨
+Aquí tienes lo que he anotado:
+* **Huevos Benedictinos** (10.50€) 🍳
+* **Café Latte** (2.50€) 🥛
+
+¿Deseas algo más?"
 """
 
-# Inicializamos el historial
+# Inicializamos el historial (quitamos el mensaje inicial para que la IA reaccione al primer "Hola" del usuario en su idioma)
 if "messages" not in st.session_state or len(st.session_state.messages) == 0:
     st.session_state.messages = [{"role": "system", "content": system_prompt}]
 
-# 2. Renderizar Mensajes
+# 2. Renderizar Mensajes (SOLUCIÓN DEFINITIVA AL TYPE_ERROR)
 for m in st.session_state.messages:
+    # Ahora 'm' siempre será un diccionario porque lo convertimos al guardar
     role = m["role"]
     content = m.get("content", "")
     
+    # Solo mostramos mensajes de usuario y asistente
     if role in ["assistant", "user"] and content:
         with st.chat_message(role, avatar="🥑" if role == "assistant" else "👤"):
             st.markdown(content)
@@ -293,14 +292,15 @@ if prompt := st.chat_input("Pide aquí... (Ej: Café y Tosta)"):
         )
         msg = response.choices[0].message
 
-        # Convertimos a Diccionario para evitar errores
+        # --- FILTRO ANTI-ERROR CORREGIDO ---
+        # Solo añadimos 'tool_calls' al diccionario si realmente existen
         msg_dict = {
             "role": msg.role,
-            "content": msg.content,
-            "tool_calls": [] 
+            "content": msg.content
         }
         
         if msg.tool_calls:
+            # Si hay tools, las añadimos
             msg_dict["tool_calls"] = [
                 {"id": t.id, "type": t.type, "function": {"name": t.function.name, "arguments": t.function.arguments}}
                 for t in msg.tool_calls
@@ -310,16 +310,16 @@ if prompt := st.chat_input("Pide aquí... (Ej: Café y Tosta)"):
             for tool in msg.tool_calls:
                 if tool.function.name == "agregar_al_pedido":
                     args = json.loads(tool.function.arguments)
-                    # La IA nos manda el nombre en español (según instrucción), así que agregamos directo
                     res = agregar_item(args.get("nombre_plato"))
                     
+                    # Respuesta de la herramienta
                     st.session_state.messages.append({
                         "role": "tool", 
                         "tool_call_id": tool.id, 
                         "content": res
                     })
             
-            # Respuesta final verbal
+            # Segunda llamada para confirmación verbal
             final_res = client.chat.completions.create(model="gpt-4o", messages=st.session_state.messages)
             st.session_state.messages.append({
                 "role": "assistant", 
@@ -327,6 +327,7 @@ if prompt := st.chat_input("Pide aquí... (Ej: Café y Tosta)"):
             })
             st.rerun()
         else:
+            # Mensaje normal (sin tools, por tanto sin la clave 'tool_calls')
             st.session_state.messages.append(msg_dict) 
             st.rerun()
             
