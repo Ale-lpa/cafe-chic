@@ -18,7 +18,7 @@ except:
 
 client = OpenAI(api_key=API_KEY)
 
-# --- ESTILOS CSS (DISEÑO PREMIUM - NO TOCAR) ---
+# --- ESTILOS CSS (DISEÑO PREMIUM) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Helvetica+Neue:wght@300;400;600&display=swap');
@@ -127,6 +127,7 @@ menu_texto = ", ".join([f"{k} ({v}€)" for k,v in MENU_DB.items()])
 # --- ESTADO ---
 if "pedido" not in st.session_state: st.session_state.pedido = []
 if "pagado" not in st.session_state: st.session_state.pagado = False
+if "mesa" not in st.session_state: st.session_state.mesa = "Mesa 5" # Valor por defecto
 
 # --- FUNCIONES ---
 def borrar_item(index):
@@ -144,9 +145,8 @@ def agregar_item(nombre_plato):
     st.session_state.pedido.append({"item": nombre_plato, "precio": precio})
     st.session_state.pagado = False
     
-    # --- TRUCO DEL ALMENDRUCO ---
-    # Devolvemos una instrucción técnica a la IA, no un texto para el usuario.
-    # Esto obliga a la IA a procesar la venta cruzada.
+    # --- INSTRUCCIÓN OCULTA PARA LA IA ---
+    # Esto fuerza la traducción y la venta cruzada
     return f"""
     [SYSTEM INFO]: Item '{nombre_plato}' added to DB.
     [INSTRUCTION FOR AI RESPONSE]: 
@@ -173,7 +173,7 @@ tools = [
     }
 ]
 
-# --- SIDEBAR ---
+# --- SIDEBAR (PANEL DE CONTROL) ---
 with st.sidebar:
     st.markdown("### ⚙️ Demo")
     if st.button("🗑️ Reiniciar Demo"):
@@ -186,16 +186,35 @@ with st.sidebar:
 st.markdown('<div class="titulo-principal">Café Chic</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitulo">Asistente Virtual</div>', unsafe_allow_html=True)
 
-# --- TICKET ---
+# --- TICKET INTELIGENTE ---
 total = sum(p['precio'] for p in st.session_state.pedido)
-label_ticket = f"🧾 TICKET MESA 5 ({len(st.session_state.pedido)}) | Total: {total:.2f}€"
-if st.session_state.pagado: label_ticket = f"🎟️ TICKET PAGADO | Total: {total:.2f}€"
+
+# Etiqueta del desplegable (cambia si está pagado)
+icono_ticket = "🧾" if not st.session_state.pagado else "🎟️"
+estado_txt = "(Abierto)" if not st.session_state.pagado else "(PAGADO)"
+label_ticket = f"{icono_ticket} TICKET {estado_txt} | Total: {total:.2f}€"
 
 with st.expander(label_ticket, expanded=(len(st.session_state.pedido) > 0)):
+    
+    # --- 1. SELECTOR DE MESA (DENTRO DEL TICKET) ---
+    st.markdown("###### 📍 Ubicación")
+    # Creamos la lista de mesas
+    opciones_mesa = [f"Mesa {i}" for i in range(1, 21)]
+    # El selectbox guarda la elección en st.session_state.mesa
+    st.session_state.mesa = st.selectbox(
+        "Selecciona el número de mesa:", 
+        options=opciones_mesa, 
+        index=4, # Por defecto Mesa 5
+        label_visibility="collapsed"
+    )
+    
+    st.markdown("---")
+    
+    # --- 2. LISTA DE PEDIDOS ---
     if not st.session_state.pedido:
-        st.info("Tu cuenta está vacía. Pide algo al chat. 🥑")
+        st.info(f"Ticket vacío para {st.session_state.mesa}. Pide algo al chat. 🥑")
     else:
-        st.markdown("###### 🛒 Tu Pedido:")
+        st.markdown(f"###### 🛒 Pedido para {st.session_state.mesa}:")
         for i, p in enumerate(st.session_state.pedido):
             c1, c2, c3 = st.columns([6, 2, 1])
             c1.markdown(f"{p['item']}")
@@ -205,6 +224,7 @@ with st.expander(label_ticket, expanded=(len(st.session_state.pedido) > 0)):
         
         st.markdown("---")
         
+        # --- 3. ACCIONES (PAGAR -> COCINA) ---
         if not st.session_state.pagado:
             if st.button(f"💳 PAGAR {total:.2f}€", type="primary", use_container_width=True):
                 st.session_state.pagado = True
@@ -213,9 +233,13 @@ with st.expander(label_ticket, expanded=(len(st.session_state.pedido) > 0)):
         else:
             st.success("✅ ¡Pago Confirmado! Pedido enviado a cocina.")
             items_str = "%0A".join([f"▪️ {p['item']}" for p in st.session_state.pedido])
-            msg = f"🔥 *NUEVA COMANDA* 🔥%0A------------------%0A{items_str}%0A------------------%0AMesa: 5%0APAGADO: {total:.2f}€"
+            
+            # Mensaje para WhatsApp con la MESA SELECCIONADA
+            msg = f"🔥 *NUEVA COMANDA* 🔥%0A------------------%0A{items_str}%0A------------------%0A📍 *{st.session_state.mesa}*%0A💰 PAGADO: {total:.2f}€"
             link = f"https://wa.me/34600000000?text={msg}"
+            
             st.link_button("👨‍🍳 ENVIAR A COCINA (WhatsApp)", link, use_container_width=True)
+            
             if st.button("🔄 Pedir más"):
                 st.session_state.pagado = False
                 st.rerun()
@@ -226,7 +250,7 @@ Eres 'Leo', el camarero virtual de 'Café Chic'.
 MENÚ (Base de datos en Español): {menu_texto}
 
 🔴 REGLAS DE ORO (SÍGUELAS OBLIGATORIAMENTE):
-1. **IDIOMA:** Detecta el idioma del usuario. Responde SIEMPRE en ese idioma.
+1. **IDIOMA:** Detecta el idioma del usuario. Responde SIEMPRE en ese mismo idioma.
 2. **TRADUCCIÓN:** Los nombres del menú están en español (ej: "Tosta Aguacate"). Si hablas en otro idioma, **TRADÚCELOS** (ej: Italiano -> "Toast all'avocado").
 3. **VENTA CRUZADA:** Nunca digas solo "Añadido". Sugiere SIEMPRE una bebida o postre específico que combine.
 
@@ -258,7 +282,7 @@ if prompt := st.chat_input("Pide aquí... (Ej: Café y Tosta)"):
         )
         msg = response.choices[0].message
         
-        # Guardar mensaje limpio para evitar errores
+        # Guardar mensaje limpio
         msg_dict = {"role": msg.role, "content": msg.content}
         if msg.tool_calls:
             msg_dict["tool_calls"] = [{"id": t.id, "type": t.type, "function": {"name": t.function.name, "arguments": t.function.arguments}} for t in msg.tool_calls]
@@ -270,7 +294,6 @@ if prompt := st.chat_input("Pide aquí... (Ej: Café y Tosta)"):
                     res = agregar_item(args.get("nombre_plato"))
                     st.session_state.messages.append({"role": "tool", "tool_call_id": tool.id, "content": res})
             
-            # Segunda llamada para que la IA lea la instrucción oculta y responda bien
             final_res = client.chat.completions.create(model="gpt-4o", messages=st.session_state.messages)
             st.session_state.messages.append({"role": "assistant", "content": final_res.choices[0].message.content})
             st.rerun()
