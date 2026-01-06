@@ -5,7 +5,7 @@ from openai import OpenAI
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(
     page_title="Café Chic | Asistente Virtual",
-    page_icon="🥑",
+    page_icon= "🥑",
     layout="centered"
 )
 
