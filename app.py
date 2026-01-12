@@ -44,35 +44,44 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- 4. BASE DE DATOS REAL (Extraída de imágenes) ---
+# --- 4. BASE DE DATOS COMPLETA (Actualizada con correcciones) ---
 MENU_DB = {
     "Desayunos": {
         "Bocadillo Jamón Ibérico": 6.00, "Croissant Croque Madame": 9.00,
         "Tosta con Aguacate Canarias": 5.90, "Tosta Tortilla Francesa": 5.80,
         "Huevos Benedictinos": 9.90, "Wrap César": 8.50
     },
-    "Especialidades": {
+    "Especialidades Canarias": {
         "Tapas Canarias para 2": 25.00, "Berenjenas fritas": 7.50,
-        "Croquetas Jamón Ibérico": 11.00, "Huevos rotos Chistorra/Gambas": 13.90,
-        "Queso Herreño asado": 11.50, "Papas Arrugadas": 6.50,
+        "Croquetas Jamón Ibérico": 11.00, "Huevos rotos Chistorra/Gambas": 3.90, # CORREGIDO
+        "Queso Herreño": 11.50, "Papas Arrugadas": 6.50,
         "Ropas Vieja de Pulpo": 14.90, "Tacos de Bacalao": 14.90
     },
+    "Ensaladas": {
+        "Carpaccio de Mero": 15.90, "Ensalada Tibia de Langostinos": 14.90,
+        "Ensalada de Burrata": 14.50, "Ensalada César": 12.50
+    },
     "Poke Bowls": { "Poke de Salmón": 14.50, "Poke de Pollo Crujiente": 13.50 },
-    "Pescados": { "Filete Lubina": 17.50, "Brocheta de Mero": 22.90, "Chipirones Saharianos": 17.50, "Paella de Mariscos": 24.00 },
+    "Pescados": { 
+        "Filete Lubina": 7.50, # CORREGIDO 
+        "Brocheta de Mero": 22.90, "Chipirones Saharianos": 17.50, "Paella de Mariscos": 24.00 
+    },
     "Carnes": { "Solomillo de Vaca Angus": 23.90, "Pollo Yassa": 14.90, "Secreto Ibérico": 17.90, "Gulash Húngaro": 16.50 },
+    "Crepes de Harina de Sarraceno": { "La Bretoña": 11.90, "La Vegetariana": 12.90, "La Salchicha": 13.90 },
+    "Vegetal": { "Humus de Alubia Carillas": 9.90, "Espaguetis de Calabacín": 13.50, "Arroz Coreano": 12.90 },
     "Postres": { "Crumble de Manzana": 6.00, "Milhojas de Vainilla": 5.00, "Profiteroles": 7.00, "Crepes Suzette": 5.00, "Bola de Helado": 2.50 }
 }
 
 # --- 5. LÓGICA DE SYSTEM PROMPT ---
 system_prompt = f"""
 Eres 'Leo', el asistente experto de Café Chic. 
-TU MENÚ REAL ES: {json.dumps(MENU_DB)}
+TU MENÚ REAL COMPLETO ES: {json.dumps(MENU_DB)}
 
 REGLAS CRÍTICAS:
-1. IDIOMA: Eres políglota. Responde SIEMPRE en el idioma del cliente (Inglés, Francés, Alemán, etc.). 
-2. NUNCA digas "solo hablo español". Si te saludan en francés, responde en francés.
-3. PRECIOS: La Tosta Aguacate base es 5.90€. Si preguntan por extras (Bacon, Burrata, etc.), indica que tienen coste adicional en barra.
-4. NO INVENTES: Si no está en el menú, no existe. Sugiere algo similar del menú real.
+1. IDIOMA: Responde SIEMPRE en el idioma del cliente. Si te hablan en inglés, responde en inglés. Prohibido decir que solo hablas español.
+2. PRECIOS: Respeta estrictamente los precios de la base de datos.
+3. CONOCIMIENTO: Conoces todas las secciones: Desayunos, Especialidades, Ensaladas, Pokes, Pescados, Carnes, Crepes de Sarraceno, Vegetal y Postres.
+4. NO INVENTES: Si algo no está en el menú, no existe.
 """
 
 # --- 6. INTERFAZ ---
@@ -87,7 +96,7 @@ for m in st.session_state.messages:
         with st.chat_message(m["role"], avatar="🥑" if m["role"] == "assistant" else "👤"):
             st.markdown(m["content"])
 
-if prompt := st.chat_input("Pide aquí o consulta el menú..."):
+if prompt := st.chat_input("Consulta nuestra carta completa..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="👤"): st.markdown(prompt)
 
