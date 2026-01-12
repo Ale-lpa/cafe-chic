@@ -3,141 +3,103 @@ import json
 from openai import OpenAI
 
 # --- 1. CONFIGURACIÓN DE PÁGINA ---
-st.set_page_config(
-    page_title="Café Chic | Powered by Localmind.",
-    page_icon="🥑",
-    layout="centered"
-)
+st.set_page_config(page_title="Café Chic | Menú Inteligente", page_icon="🥑", layout="centered")
 
 # --- 2. CLAVE SEGURA ---
 try:
-    API_KEY = st.secrets["OPENAI_API_KEY"]
+    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 except:
-    st.error("⚠️ Falta la clave API en los Secrets.")
+    st.error("⚠️ Error de conexión. Revisa los Secrets.")
     st.stop()
 
-client = OpenAI(api_key=API_KEY)
-
-# --- 3. ESTILOS CSS (SINTONÍA TOTAL #6A8E7F) ---
-st.markdown(f"""
+# --- 3. ESTILOS CSS (DISEÑO PREMIUM + BRANDING INFERIOR) ---
+st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Helvetica+Neue:wght@300;400;600&display=swap');
 
-    /* FONDO CON EL VERDE CORRECTO */
-    [data-testid="stAppViewContainer"] {{
+    [data-testid="stAppViewContainer"] {
         background-color: #FFFFFF;
         background-image: repeating-linear-gradient(90deg, #FFFFFF, #FFFFFF 25px, #6A8E7F 25px, #6A8E7F 50px);
-    }}
+    }
     
-    [data-testid="stMainBlockContainer"] {{
+    [data-testid="stMainBlockContainer"] {
         background-color: rgba(255, 255, 255, 0.98);
         border: 2px solid #D4AF37;
         border-radius: 20px;
         padding: 25px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         max-width: 700px;
-    }}
+    }
 
-    /* BRANDING LOCALMIND */
-    .branding-container {{ text-align: center; padding-bottom: 10px; }}
-    .powered-by {{ color: #6A8E7F; font-size: 10px; letter-spacing: 3px; font-weight: bold; text-transform: uppercase; margin:0; }}
-    .localmind-logo {{ color: #333; font-size: 18px; font-weight: 800; margin:0; font-family: sans-serif; }}
-    .dot {{ color: #6A8E7F; }}
+    .titulo-principal { font-family: 'Dancing Script', cursive; color: #D4AF37; text-align: center; font-size: 3.5rem; margin: 0; }
+    .subtitulo { text-align: center; color: #6A8E7F; font-family: 'Helvetica Neue', sans-serif; letter-spacing: 4px; font-size: 0.8rem; margin-bottom: 20px; }
 
-    .titulo-principal {{
-        font-family: 'Dancing Script', cursive;
-        color: #D4AF37;
-        text-align: center;
-        font-size: 3.5rem;
-        margin-top: 0px;
-    }}
+    /* BRANDING LOCALMIND AL FINAL */
+    .branding-footer { text-align: center; padding-top: 40px; border-top: 1px solid #eee; margin-top: 30px; }
+    .powered-by { color: #6A8E7F; font-size: 9px; letter-spacing: 3px; font-weight: bold; text-transform: uppercase; margin:0; }
+    .localmind-logo { color: #333; font-size: 16px; font-weight: 800; margin:0; font-family: sans-serif; }
+    .dot { color: #6A8E7F; }
 
-    /* AJUSTE DE COLOR EN SUBTÍTULO */
-    .subtitulo {{
-        text-align: center;
-        color: #6A8E7F;
-        font-family: 'Helvetica Neue', sans-serif;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 4px;
-        font-size: 0.8rem;
-        margin-bottom: 20px;
-    }}
-
-    /* OCULTAR ELEMENTOS NATIVOS */
-    [data-testid="stHeader"], footer {{visibility: hidden;}}
+    [data-testid="stHeader"], footer {visibility: hidden;}
     </style>
 """, unsafe_allow_html=True)
 
-# --- 4. HEADER BRANDING ---
-st.markdown("""
-<div class="branding-container">
-    <p class="powered-by">Powered by</p>
-    <p class="localmind-logo">Localmind<span class="dot">.</span></p>
-</div>
-""", unsafe_allow_html=True)
+# --- 4. BASE DE DATOS REAL (Extraída de imágenes) ---
+MENU_DB = {
+    "Desayunos": {
+        "Bocadillo Jamón Ibérico": 6.00, "Croissant Croque Madame": 9.00,
+        "Tosta con Aguacate Canarias": 5.90, "Tosta Tortilla Francesa": 5.80,
+        "Huevos Benedictinos": 9.90, "Wrap César": 8.50
+    },
+    "Especialidades": {
+        "Tapas Canarias para 2": 25.00, "Berenjenas fritas": 7.50,
+        "Croquetas Jamón Ibérico": 11.00, "Huevos rotos Chistorra/Gambas": 13.90,
+        "Queso Herreño asado": 11.50, "Papas Arrugadas": 6.50,
+        "Ropas Vieja de Pulpo": 14.90, "Tacos de Bacalao": 14.90
+    },
+    "Poke Bowls": { "Poke de Salmón": 14.50, "Poke de Pollo Crujiente": 13.50 },
+    "Pescados": { "Filete Lubina": 17.50, "Brocheta de Mero": 22.90, "Chipirones Saharianos": 17.50, "Paella de Mariscos": 24.00 },
+    "Carnes": { "Solomillo de Vaca Angus": 23.90, "Pollo Yassa": 14.90, "Secreto Ibérico": 17.90, "Gulash Húngaro": 16.50 },
+    "Postres": { "Crumble de Manzana": 6.00, "Milhojas de Vainilla": 5.00, "Profiteroles": 7.00, "Crepes Suzette": 5.00, "Bola de Helado": 2.50 }
+}
 
+# --- 5. LÓGICA DE SYSTEM PROMPT ---
+system_prompt = f"""
+Eres 'Leo', el asistente experto de Café Chic. 
+TU MENÚ REAL ES: {json.dumps(MENU_DB)}
+
+REGLAS CRÍTICAS:
+1. IDIOMA: Eres políglota. Responde SIEMPRE en el idioma del cliente (Inglés, Francés, Alemán, etc.). 
+2. NUNCA digas "solo hablo español". Si te saludan en francés, responde en francés.
+3. PRECIOS: La Tosta Aguacate base es 5.90€. Si preguntan por extras (Bacon, Burrata, etc.), indica que tienen coste adicional en barra.
+4. NO INVENTES: Si no está en el menú, no existe. Sugiere algo similar del menú real.
+"""
+
+# --- 6. INTERFAZ ---
 st.markdown('<div class="titulo-principal">Café Chic</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitulo">Asistente Virtual</div>', unsafe_allow_html=True)
 
-# --- 5. BASE DE DATOS Y LÓGICA DE PEDIDOS (Igual al original) ---
-MENU_DB = {
-    "Tosta Aguacate": 8.50,
-    "Huevos Benedictinos": 10.50,
-    "Croissant Jamón": 5.50,
-    "Bowl de Açaí": 9.00,
-    "Café Latte": 2.50,
-    "Cappuccino": 3.00,
-    "Zumo Naranja": 3.50,
-    "Mimosa": 6.00,
-    "Tarta Zanahoria": 4.50,
-    "Cheesecake": 5.00
-}
-menu_texto = ", ".join([f"{k} ({v}€)" for k,v in MENU_DB.items()])
-
-if "pedido" not in st.session_state: st.session_state.pedido = []
-if "pagado" not in st.session_state: st.session_state.pagado = False
-if "mesa" not in st.session_state: st.session_state.mesa = "Mesa 5"
-
-def agregar_item(nombre_plato):
-    precio = MENU_DB.get(nombre_plato, 0.0)
-    st.session_state.pedido.append({"item": nombre_plato, "precio": precio})
-    st.session_state.pagado = False
-    return f"[SYSTEM]: '{nombre_plato}' añadido. Responde al usuario en su idioma y ofrece venta cruzada."
-
-# --- 6. SYSTEM PROMPT (ANTI-MEZCLA DE IDIOMAS) ---
-system_prompt = f"""
-Eres 'Leo', el camarero virtual premium de 'Café Chic'. 
-MENÚ: {menu_texto}
-
-REGLAS DE ORO (MÁXIMA PRIORIDAD):
-1. **DETECTA EL IDIOMA:** Responde ÚNICA Y EXCLUSIVAMENTE en el idioma que el usuario utilice. 
-2. **NO MEZCLES:** Está PROHIBIDO decir palabras en otros idiomas (ej. NO digas 'Bonjour' o 'Hi' si el usuario habla español). 
-3. **TRADUCCIÓN:** Traduce los platos del menú al idioma del usuario (ej: 'Tosta Aguacate' -> 'Toast all'avocado' en italiano).
-4. **VENTA CRUZADA:** Sugiere siempre un maridaje (bebida o postre).
-"""
-
-# --- 7. CHAT Y LÓGICA ---
 if "messages" not in st.session_state:
     st.session_state.messages = [{"role": "system", "content": system_prompt}]
 
 for m in st.session_state.messages:
-    if m["role"] in ["assistant", "user"]:
+    if m["role"] != "system":
         with st.chat_message(m["role"], avatar="🥑" if m["role"] == "assistant" else "👤"):
             st.markdown(m["content"])
 
-if prompt := st.chat_input("¿Qué te apetece tomar?"):
+if prompt := st.chat_input("Pide aquí o consulta el menú..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user", avatar="👤"):
-        st.markdown(prompt)
+    with st.chat_message("user", avatar="👤"): st.markdown(prompt)
 
-    # Nota CTO: Usamos gpt-4o-mini para mayor velocidad y menor coste, manteniendo la calidad.
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=st.session_state.messages
-    )
-    
-    full_response = response.choices[0].message.content
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
-    with st.chat_message("assistant", avatar="🥑"):
-        st.markdown(full_response)
+    response = client.chat.completions.create(model="gpt-4o-mini", messages=st.session_state.messages)
+    ai_msg = response.choices[0].message.content
+    st.session_state.messages.append({"role": "assistant", "content": ai_msg})
+    with st.chat_message("assistant", avatar="🥑"): st.markdown(ai_msg)
+
+# --- 7. BRANDING LOCALMIND AL FINAL ---
+st.markdown("""
+<div class="branding-footer">
+    <p class="powered-by">Powered by</p>
+    <p class="localmind-logo">Localmind<span class="dot">.</span></p>
+</div>
+""", unsafe_allow_html=True)
