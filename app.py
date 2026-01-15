@@ -1,96 +1,51 @@
 import streamlit as st
-import json
-from openai import OpenAI
+import openai
 
-# --- 1. CONFIGURACIÓN ---
-st.set_page_config(page_title="Café Chic | Powered by Localmind.", page_icon="🥑", layout="centered")
+# --- 1. IDENTIDAD CAFÉ CHIC ---
+NOMBRE_RESTAURANTE = "Café<br>Chic" 
+ESLOGAN = "ELEGANCIA EN CADA GRANO"
+LOGO_URL = "" # Dejar vacío para evitar el recuadro de error
 
-try:
-    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-except:
-    st.error("⚠️ Error de conexión. Revisa los Secrets.")
-    st.stop()
+# --- 2. CONFIGURACIÓN DE PÁGINA ---
+st.set_page_config(page_title="Café Chic - LocalMind", layout="wide")
 
-# --- 2. CSS ANTI-MODO OSCURO Y ALTO CONTRASTE ---
-st.markdown("""
+# --- 3. ESTÉTICA "LA BARCA" ADAPTADA ---
+st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Helvetica+Neue:wght@300;400;600&display=swap');
-
-    [data-testid="stAppViewContainer"] {
-        background-color: #FFFFFF !important;
-        background-image: repeating-linear-gradient(90deg, #FFFFFF, #FFFFFF 25px, #6A8E7F 25px, #6A8E7F 50px) !important;
-    }
-    
-    [data-testid="stMainBlockContainer"] {
-        background-color: white !important;
-        border: 2px solid #D4AF37;
-        border-radius: 20px;
-        padding: 25px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
-
-    .titulo-principal { font-family: 'Dancing Script', cursive; color: #D4AF37; text-align: center; font-size: 3.5rem; margin: 0; }
-    .subtitulo { text-align: center; color: #6A8E7F; font-family: 'Helvetica Neue', sans-serif; letter-spacing: 4px; font-size: 0.8rem; margin-bottom: 20px; }
-
-    .stChatMessage p { color: #333333 !important; }
-    [data-testid="stChatMessageAssistant"] p { color: #6A8E7F !important; font-weight: 600; }
-
-    .branding-footer { text-align: center; padding-top: 40px; border-top: 1px solid #eee; margin-top: 30px; }
-    .powered-by { color: #6A8E7F; font-size: 9px; letter-spacing: 3px; font-weight: bold; text-transform: uppercase; margin:0; }
-    .localmind-logo { color: #333; font-size: 16px; font-weight: 800; margin:0; font-family: sans-serif; }
-    .dot { color: #6A8E7F; }
-
-    [data-testid="stHeader"], footer {visibility: hidden;}
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
+    .stApp {{ background-image: url("https://i.postimg.cc/Dfs82Dv6/Gemini_Generated_Image_d7nq1bd7nq1bd7nq.png"); background-size: cover; background-attachment: fixed; }}
+    .block-container {{ padding-top: 0rem !important; padding-bottom: 230px !important; max-width: 100% !important; }}
+    [data-testid="stImage"] {{ background: transparent !important; }}
+    [data-testid="stImage"] [data-testid="stMarkdownContainer"] {{ display: none !important; }}
+    .stChatMessage [data-testid="stMarkdownContainer"] p {{ font-weight: 800; color: #FFFFFF; text-shadow: 2px 2px 4px rgba(0,0,0,1); }}
+    .header-right-box {{ text-align: right; width: 100%; margin-top: -125px; padding-right: 20px; }}
+    .restaurant-title {{ font-family: 'Playfair Display', serif; color: #002147; font-size: 60px; font-weight: 700; line-height: 0.85; margin: 0; }}
+    .restaurant-subtitle {{ color: #C5A059; letter-spacing: 5px; font-size: 16px; font-weight: 900; border-top: 2px solid #002147; display: inline-block; margin-top: 5px; padding-top: 5px; text-transform: uppercase; }}
+    .sticky-footer-container {{ position: fixed; left: 0; bottom: 115px; width: 100%; text-align: center; z-index: 100; }}
+    .brand-line {{ color: #FFFFFF; font-weight: 900; font-size: 16px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }}
+    .footer-link {{ color: #C5A059; text-decoration: none; font-weight: 900; }}
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. BASE DE DATOS REAL ---
-MENU_DB = {
-    "Desayunos": {"Bocadillo Jamón Ibérico": 6.00, "Croissant Croque Madame": 9.00, "Tosta con Aguacate Canarias": 5.90, "Tosta Tortilla Francesa": 5.80, "Huevos Benedictinos": 9.90, "Wrap César": 8.50},
-    "Especialidades Canarias": {"Tapas Canarias para 2": 25.00, "Berenjenas fritas": 7.50, "Croquetas Jamón Ibérico": 11.00, "Huevos rotos (Chistorra o Gambas y Choco)": 3.90, "Queso Herreño asado": 11.50, "Papas Arrugadas": 6.50, "Ropas Vieja de Pulpo": 14.90, "Tacos de Bacalao": 14.90},
-    "Ensaladas": {"Carpaccio de Mero": 15.90, "Ensalada Tibia de Langostinos": 14.90, "Ensalada de Burrata": 4.50, "Ensalada César": 12.50},
-    "Pescados": {"Filete Lubina a la plancha": 7.50, "Brocheta de Mero a la parilla": 22.90, "Chipirones Saharianos": 17.50, "Paella de Mariscos": 24.00},
-    "Carnes": {"Solomillo de Vaca Angus": 23.90, "Pollo Yassa": 14.90, "Secreto Ibérico": 17.90, "Gulash Húngaro": 16.50},
-    "Crepes de Harina de Sarraceno": {"La Bretoña": 11.90, "La Vegetariana": 12.90, "La Salchicha": 13.90},
-    "Vegetal": {"Humus de Alubia Carillas": 9.90, "Espaguetis de Calabacín": 13.50, "Arroz Coreano": 12.90},
-    "Postres": {"Crumble de Manzana": 6.00, "Milhojas de Vainilla": 5.00, "Profiteroles": 7.00, "Crepes Suzette": 5.00, "Bola de Helado": 2.50}
-}
+# --- 4. CABECERA ---
+col_logo, col_text = st.columns([1, 3])
+with col_text:
+    st.markdown(f'<div class="header-right-box"><p class="restaurant-title">{NOMBRE_RESTAURANTE}</p><p class="restaurant-subtitle">{ESLOGAN}</p></div>', unsafe_allow_html=True)
 
-# --- 4. SYSTEM PROMPT ---
-system_prompt = f"""
-Eres 'Leo', el asistente experto de Café Chic. 
-TU MENÚ REAL: {json.dumps(MENU_DB)}
-REGLAS:
-1. TRADUCCIÓN OBLIGATORIA: Traduce todo al idioma del cliente.
-2. SÍMBOLO DEL EURO: Muestra SIEMPRE '€' junto a cada precio (Ej: 5.90€).
-3. VENTA SUGERIDA: Sugiere acompañar con 'Zumo de Naranja Natural'. Menciona que las sugerencias pueden cambiar diariamente.
-"""
+# --- 5. LÓGICA CON ESCRITURA (STREAMING) ---
+SYSTEM_PROMPT = f"Eres el barista y sumiller de {NOMBRE_RESTAURANTE}. Tu tono es sofisticado. Sugiere siempre maridajes entre café/té y repostería artesanal con sus precios."
 
-# --- 5. INTERFAZ Y LÓGICA ---
-st.markdown('<div class="titulo-principal">Café Chic</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitulo">Asistente Virtual</div>', unsafe_allow_html=True)
-
-if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "system", "content": system_prompt}]
-
+if "messages" not in st.session_state: st.session_state.messages = []
 for m in st.session_state.messages:
-    if m["role"] != "system":
-        with st.chat_message(m["role"], avatar="🥑" if m["role"] == "assistant" else "☕"):
-            st.markdown(m["content"])
+    with st.chat_message(m["role"], avatar="☕" if m["role"]=="user" else "🍰"): st.markdown(m["content"])
 
-if prompt := st.chat_input("Consulta nuestra carta completa..."):
+if prompt := st.chat_input("¿Qué le apetece hoy?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="☕"): st.markdown(prompt)
-
-    with st.chat_message("assistant", avatar="🥑"):
-        res_placeholder = st.empty()
-        full_res = ""
-        stream = client.chat.completions.create(model="gpt-4o-mini", messages=st.session_state.messages, stream=True)
-        for chunk in stream:
-            if chunk.choices[0].delta.content:
-                full_res += chunk.choices[0].delta.content
-                res_placeholder.markdown(full_res + "▌")
-        res_placeholder.markdown(full_res)
+    with st.chat_message("assistant", avatar="🍰"):
+        client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+        stream = client.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": SYSTEM_PROMPT}] + st.session_state.messages, stream=True)
+        full_res = st.write_stream(stream)
     st.session_state.messages.append({"role": "assistant", "content": full_res})
 
-st.markdown("""<div class="branding-footer"><p class="powered-by">Powered by</p><p class="localmind-logo">Localmind<span class="dot">.</span></p></div>""", unsafe_allow_html=True)
+st.markdown(f'<div class="sticky-footer-container"><p class="brand-line">powered by localmind.</p><p><a href="https://wa.me/34602566673" target="_blank" class="footer-link">¿Quieres este asistente?</a></p></div>', unsafe_allow_html=True)
