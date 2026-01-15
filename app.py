@@ -4,14 +4,14 @@ import openai
 # --- 1. CONFIGURACIÓN DE IDENTIDAD ---
 NOMBRE_RESTAURANTE = "Nombre de<br>Tu Local" 
 ESLOGAN = "EXPERIENCIA GASTRONÓMICA"
-# Nueva imagen de fondo: Interior de restaurante de lujo (más limpia y vendedora)
+# Imagen de fondo: Restaurante de lujo
 FONDO_URL = "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=2070&auto=format&fit=crop"
 LOGO_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" 
 
 # --- 2. CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="LocalMind AI", layout="wide")
 
-# --- 3. ESTÉTICA PROFESIONAL SIN CORTES ---
+# --- 3. ESTÉTICA PROFESIONAL PULIDA ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
@@ -24,7 +24,6 @@ st.markdown(f"""
         background-position: center center;
     }}
     
-    /* Overlay para legibilidad */
     .stApp::before {{
         content: "";
         position: absolute;
@@ -35,7 +34,7 @@ st.markdown(f"""
 
     .block-container {{
         padding-top: 0rem !important;
-        padding-bottom: 250px !important; /* Espacio extra para que el chat no se esconda */
+        padding-bottom: 250px !important;
         max-width: 100% !important;
     }}
 
@@ -74,24 +73,26 @@ st.markdown(f"""
         text-transform: uppercase;
     }}
 
-    /* --- ARREGLO DEL CUADRO DE TEXTO (INPUT) --- */
-    .stChatInputContainer {{
-        background-color: rgba(255, 255, 255, 0.05) !important;
-        border-radius: 15px !important;
-        padding: 10px !important;
-        bottom: 30px !important; /* Lo subimos para que no se corte */
-    }}
-    
+    /* --- LIMPIEZA TOTAL DEL CUADRO DE TEXTO --- */
     [data-testid="stChatInput"] {{
-        border: 1px solid rgba(197, 160, 89, 0.5) !important;
+        border: none !important; 
+        box-shadow: none !important;
         border-radius: 10px !important;
-        background-color: rgba(0, 33, 71, 0.8) !important; /* Azul marino LocalMind */
+        background-color: rgba(0, 33, 71, 0.8) !important; /* Azul LocalMind */
         color: white !important;
     }}
+    
+    /* Eliminar la raya superior que pone Streamlit por defecto */
+    .stChatInputContainer {{
+        background-color: transparent !important;
+        border-top: none !important;
+        padding-bottom: 35px !important;
+        bottom: 30px !important;
+    }}
 
-    /* --- FOOTER LOCALMIND --- */
+    /* Footer LocalMind */
     .sticky-footer-container {{
-        position: fixed; left: 0; bottom: 120px; width: 100%; text-align: center; z-index: 100;
+        position: fixed; left: 0; bottom: 125px; width: 100%; text-align: center; z-index: 100;
         background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%);
         padding-bottom: 10px;
     }}
@@ -104,20 +105,25 @@ st.markdown(f"""
 st.markdown('<div class="logo-container"></div>', unsafe_allow_html=True)
 st.markdown(f'<div class="header-right-box"><p class="restaurant-title">{NOMBRE_RESTAURANTE}</p><p class="restaurant-subtitle">{ESLOGAN}</p></div>', unsafe_allow_html=True)
 
-# --- 5. LÓGICA DE ASISTENTE CON ESCRITURA ---
-SYSTEM_PROMPT = f"Eres el sumiller de {NOMBRE_RESTAURANTE}. Ofrece precios, vinos y maridajes. Powered by LocalMind."
+# --- 5. LÓGICA DE ASISTENTE CON ICONOS NUEVOS ---
+# Sombrero de copa (🎩) y Cara sonriente (😊)
+SYSTEM_PROMPT = f"Eres el sumiller virtual de {NOMBRE_RESTAURANTE}. Ofrece precios, vinos y maridajes de forma experta. Powered by LocalMind."
 
 if "messages" not in st.session_state: st.session_state.messages = []
 
+# Dibujar historial con nuevos emoticonos
 for message in st.session_state.messages:
-    with st.chat_message(message["role"], avatar="🐟" if message["role"] == "user" else "⚓"):
+    icon = "😊" if message["role"] == "user" else "🎩"
+    with st.chat_message(message["role"], avatar=icon):
         st.markdown(message["content"])
 
+# Entrada de usuario
 if prompt := st.chat_input("Escriba su consulta aquí..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user", avatar="🐟"): st.markdown(prompt)
+    with st.chat_message("user", avatar="😊"): 
+        st.markdown(prompt)
 
-    with st.chat_message("assistant", avatar="⚓"):
+    with st.chat_message("assistant", avatar="🎩"):
         client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
         stream = client.chat.completions.create(
             model="gpt-4o", 
@@ -127,10 +133,10 @@ if prompt := st.chat_input("Escriba su consulta aquí..."):
         full_response = st.write_stream(stream)
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-# --- 6. PIE DE PÁGINA COMERCIAL ---
+# --- 6. PIE DE PÁGINA ---
 st.markdown(f"""
     <div class="sticky-footer-container">
         <p class="brand-line">powered by localmind.</p>
-        <p><a href="https://wa.me/34602566673" target="_blank" class="footer-link">¿Quieres este asistente para tu local?</a></p>
+        <p><a href="https://wa.me/34602566673" target="_blank" class="footer-link">¿Deseas este asistente en tu restaurante?</a></p>
     </div>
 """, unsafe_allow_html=True)
